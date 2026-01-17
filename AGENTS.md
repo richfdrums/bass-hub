@@ -58,7 +58,7 @@
 ## Common Tasks & Rules
 -   **Adding IPC**: Add handler in `main.js`, expose in `preload.js` whitelist, consume in React components.
 -   **Styling**: Use `index.css` for app-wide variables (colors, fonts). Maintain the dark/premium aesthetic.
--   **Icons**: The app uses a custom "Squircle" icon. Source is `src/assets/logo.webp`.
+-   **Icons**: The app uses a custom "Squircle" icon. Source is `src/assets/logo.png`.
 
 ## recent_history.md
 *(Agent Note: Check this file if present for specific user session context)*
