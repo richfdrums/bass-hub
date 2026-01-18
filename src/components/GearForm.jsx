@@ -11,6 +11,7 @@ const CATEGORIES = {
 const LURE_TYPES = ['Worm', 'Frog', 'Creature', 'Stickbait', 'Soft Jerkbait', 'Hard Jerkbait', 'Crankbait', 'Topwater', 'Spinnerbait', 'Jig'];
 const LINE_TYPES = ['Monofilament', 'Flourocarbon', 'Braid', 'Copolymer'];
 const REEL_TYPES = ['Baitcast', 'Spinning'];
+const ROD_TYPES = ['Casting', 'Spinning'];
 const TERMINAL_TYPES = ['Hook', 'Weight', 'Jighead'];
 const HOOK_SUBTYPES = ['EWG', 'Offset', 'Straight Shank', 'Dropshot'];
 const WEIGHT_SUBTYPES = ['Worm / Flipping', 'Dropshot'];
@@ -147,6 +148,10 @@ const GearForm = ({
         case CATEGORIES.RODS:
             categoryFields = (
                 <>
+                    <select value={formData.type || ''} onChange={e => setFormData({ ...formData, type: e.target.value })}>
+                        <option value="">Select Rod Type</option>
+                        {ROD_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
                     {commonFields}
                     <div className="row">
                         <input placeholder={`Length (e.g. 7'0")`} value={formData.length || ''} onChange={e => setFormData({ ...formData, length: e.target.value })} />

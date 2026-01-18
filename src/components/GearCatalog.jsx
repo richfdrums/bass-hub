@@ -48,6 +48,7 @@ const GearDetail = ({ item, onBack, onEdit, onDelete }) => {
                         <div className="specs-grid">
                             {item.category === CATEGORIES.RODS && (
                                 <>
+                                    <div className="spec-item"><label>Type</label><span>{item.type || '-'}</span></div>
                                     <div className="spec-item"><label>Length</label><span>{item.length || '-'}</span></div>
                                     <div className="spec-item"><label>Power</label><span>{item.power || '-'}</span></div>
                                     <div className="spec-item"><label>Action</label><span>{item.action || '-'}</span></div>

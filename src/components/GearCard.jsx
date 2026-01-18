@@ -26,7 +26,7 @@ const GearCard = ({ item, onImageClick, onTitleClick, onEdit, onDelete }) => {
                 </div>
                 <div className="card-specs">
                     {item.category === CATEGORIES.RODS && (
-                        <p><span>{item.length}</span> <span>{item.power}</span> <span>{item.action}</span></p>
+                        <p><span>{item.type}</span> <span>{item.length}</span> <span>{item.power}</span> <span>{item.action}</span></p>
                     )}
                     {item.category === CATEGORIES.REELS && (
                         <p><span>{item.type}</span> <span>{item.size}</span> <span>{item.gear_ratio}</span></p>
