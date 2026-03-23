@@ -84,7 +84,8 @@ nav {
   flex-direction: column;
   padding: 0 12px;
   gap: 8px;
-  flex: 1; /* Allow nav to grow and push footer down */
+  flex: 1;
+  /* Allow nav to grow and push footer down */
 }
 
 .sidebar-footer {
@@ -1148,6 +1149,7 @@ textarea {
   line-height: 1.1;
   background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-bottom: 0;
 }
@@ -1526,4 +1528,114 @@ textarea,
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2);
+}
+
+/* Tide Widget Styles */
+.tide-widget {
+  min-width: 280px;
+  height: 100%;
+}
+
+.tide-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.tide-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.tide-item:hover {
+  background: rgba(var(--accent-rgb), 0.1);
+}
+
+.tide-type {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+
+.tide-type.high {
+  background: rgba(35, 134, 54, 0.2);
+  color: #238636;
+  border: 1px solid rgba(35, 134, 54, 0.4);
+}
+
+.tide-type.low {
+  background: rgba(218, 54, 51, 0.15);
+  color: #da3633;
+  border: 1px solid rgba(218, 54, 51, 0.3);
+}
+
+.tide-time {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.tide-value {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.tide-date-input {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+
+.tide-date-input:focus {
+  border-color: var(--accent);
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+  gap: 15px;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+.station-info {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  opacity: 0.6;
+  margin-top: 20px;
+  text-align: right;
+  font-style: italic;
+}
+
+.empty-text {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  text-align: center;
+  padding: 20px 0;
+}
+
+/* Ensure widgets are not stretching in weird ways if content is added */
+.grid {
+  align-items: start;
 }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import TideWidget from './TideWidget';
 
 const Dashboard = ({ setActiveTab, navigateToSmartAdd, navigateToTripDetail }) => {
     const [stats, setStats] = useState({ gearCount: 0, tripCount: 0, linkCount: 0 });
@@ -83,6 +84,7 @@ const Dashboard = ({ setActiveTab, navigateToSmartAdd, navigateToTripDetail }) =
                     <p className="big-number">{stats.linkCount}</p>
                     <p>useful resources saved</p>
                 </div>
+                <TideWidget />
             </div>
         </div>
     );
