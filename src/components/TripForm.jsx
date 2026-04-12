@@ -14,7 +14,8 @@ const TripForm = ({
     setMarkerPosition,
     onSubmit,
     onCancel,
-    editingId
+    editingId,
+    mapsApiKey
 }) => {
     const defaultCenter = { lat: 39.8283, lng: -98.5795 };
 
@@ -75,47 +76,38 @@ const TripForm = ({
                 <div className="form-inputs" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                     <div className="map-search-section">
                         <label className="label" style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: 'var(--text-dim)' }}>
-                            Search for Location:
+                            Map Address/Query String:
                         </label>
-                        <PlaceAutocomplete onPlaceSelect={onPlaceSelect} />
+                        <input
+                            placeholder="e.g. Lake Casitas, CA"
+                            value={newTrip.map_query || ''}
+                            onChange={e => setNewTrip({ ...newTrip, map_query: e.target.value })}
+                            style={{ width: '100%' }}
+                        />
                     </div>
 
                     <div className="map-container" style={{ height: '250px', width: '100%', borderRadius: '8px', overflow: 'hidden', marginTop: '10px', border: '1px solid var(--border)', background: '#111' }}>
-                        {window.google ? (
-                            <Map
-                                defaultZoom={4}
-                                defaultCenter={defaultCenter}
-                                center={selectedPlace ? null : mapCenter}
-                                mapId="DEMO_MAP_ID"
-                                onClick={handleMapClick}
-                                options={{
-                                    disableDefaultUI: false,
-                                    zoomControl: true,
-                                    streetViewControl: false,
-                                    mapTypeControl: false,
-                                    fullscreenControl: false
-                                }}
-                            >
-                                {markerPosition && <AdvancedMarker position={markerPosition} />}
-                                <MapHandler place={selectedPlace} />
-                            </Map>
+                        {mapsApiKey && newTrip.map_query ? (
+                            <iframe
+                                width="100%"
+                                height="100%"
+                                style={{ border: 0 }}
+                                loading="lazy"
+                                allowFullScreen
+                                referrerPolicy="no-referrer-when-downgrade"
+                                src={`https://www.google.com/maps/embed/v1/place?key=${mapsApiKey}&q=${encodeURIComponent(newTrip.map_query)}`}
+                            ></iframe>
                         ) : (
                             <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center', color: 'var(--text-dim)' }}>
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: '40px', height: '40px', marginBottom: '10px', opacity: 0.5 }}>
                                     <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                     <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
-                                <p style={{ fontSize: '0.85rem' }}>Google Maps not configured.</p>
-                                <p style={{ fontSize: '0.75rem', marginTop: '5px' }}>Add your API key in Settings to enable map features.</p>
+                                <p style={{ fontSize: '0.85rem' }}>Map Preview Unavailable</p>
+                                <p style={{ fontSize: '0.75rem', marginTop: '5px' }}>Enter an address query and ensure your API key is configured.</p>
                             </div>
                         )}
                     </div>
-
-                    {markerPosition && (
-                        <p className="coords" style={{ fontSize: '0.8rem', color: 'var(--accent)', marginTop: '5px' }}>
-                            Selected: {markerPosition.lat.toFixed(4)}, {markerPosition.lng.toFixed(4)}
-                        </p>
-                    )}
                 </div>
 
                 <div className="trip-details-inputs" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>

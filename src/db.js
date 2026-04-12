@@ -86,6 +86,13 @@ try {
   // Column already exists
 }
 
+// Migration: Add map_query column to trips
+try {
+  db.prepare('ALTER TABLE trips ADD COLUMN map_query TEXT').run();
+} catch (e) {
+  // Column already exists
+}
+
 // Migration: Add category to quick_links
 try {
   db.prepare('ALTER TABLE quick_links ADD COLUMN category TEXT DEFAULT "Other"').run();
@@ -130,11 +137,11 @@ export default {
 
   // Trips CRUD
   getTrips: () => {
-    const trips = db.prepare('SELECT * FROM trips ORDER BY start_date DESC').all();
+    const trips = db.prepare('SELECT * FROM trips ORDER BY start_date ASC').all();
     return trips.map(t => ({ ...t, links: t.links ? JSON.parse(t.links) : [] }));
   },
-  addTrip: (trip) => db.prepare('INSERT INTO trips (location, lat, lng, start_date, end_date, notes, total_cost, links) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(trip.location, trip.lat, trip.lng, trip.start_date, trip.end_date, trip.notes, trip.total_cost, JSON.stringify(trip.links || [])),
-  updateTrip: (id, trip) => db.prepare('UPDATE trips SET location = ?, lat = ?, lng = ?, start_date = ?, end_date = ?, notes = ?, total_cost = ?, links = ? WHERE id = ?').run(trip.location, trip.lat, trip.lng, trip.start_date, trip.end_date, trip.notes, trip.total_cost, JSON.stringify(trip.links || []), id),
+  addTrip: (trip) => db.prepare('INSERT INTO trips (location, lat, lng, start_date, end_date, notes, total_cost, links, map_query) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(trip.location, trip.lat, trip.lng, trip.start_date, trip.end_date, trip.notes, trip.total_cost, JSON.stringify(trip.links || []), trip.map_query),
+  updateTrip: (id, trip) => db.prepare('UPDATE trips SET location = ?, lat = ?, lng = ?, start_date = ?, end_date = ?, notes = ?, total_cost = ?, links = ?, map_query = ? WHERE id = ?').run(trip.location, trip.lat, trip.lng, trip.start_date, trip.end_date, trip.notes, trip.total_cost, JSON.stringify(trip.links || []), trip.map_query, id),
   deleteTrip: (id) => db.prepare('DELETE FROM trips WHERE id = ?').run(id),
 
   // Links CRUD

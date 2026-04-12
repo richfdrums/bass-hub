@@ -12,15 +12,18 @@ const TripCard = ({ trip, onTitleClick, onEdit, onDelete }) => {
                     <h4 onClick={() => onTitleClick(trip)} style={{ cursor: 'pointer' }} className="card-title-link">{trip.location}</h4>
                 </div>
                 <div className="card-specs">
-                    {trip.lat && (
+                    {(trip.map_query || trip.lat) && (
                         <p style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                             <a
-                                href={`https://www.google.com/maps/search/?api=1&query=${trip.lat},${trip.lng}`}
+                                href={trip.map_query 
+                                    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(trip.map_query)}` 
+                                    : `https://www.google.com/maps/search/?api=1&query=${trip.lat},${trip.lng}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                style={{ color: 'var(--accent)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                style={{ color: 'var(--accent)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '250px' }}
+                                title={trip.map_query || `${trip.lat}, ${trip.lng}`}
                             >
-                                📍 {trip.lat.toFixed(4)}, {trip.lng.toFixed(4)}
+                                📍 {trip.map_query ? trip.map_query : `${trip.lat.toFixed(4)}, ${trip.lng.toFixed(4)}`}
                             </a>
                         </p>
                     )}

@@ -27,22 +27,18 @@ const TripDetail = ({ trip, onBack, onEdit, onDelete, apiKey }) => {
                 <div className="article-content">
                     {trip.lat && trip.lng && (
                         <div className="article-image" style={{ height: '400px', position: 'relative', background: '#111' }}>
-                            {window.google ? (
-                                <Map
-                                    defaultZoom={14}
-                                    defaultCenter={{ lat: trip.lat, lng: trip.lng }}
-                                    center={{ lat: trip.lat, lng: trip.lng }}
-                                    mapId="TRIP_DETAIL_MAP"
-                                    options={{
-                                        disableDefaultUI: false,
-                                        zoomControl: true,
-                                        streetViewControl: false,
-                                        mapTypeControl: false,
-                                        fullscreenControl: true
-                                    }}
-                                >
-                                    <AdvancedMarker position={{ lat: trip.lat, lng: trip.lng }} />
-                                </Map>
+                            {apiKey ? (
+                                <iframe
+                                    width="100%"
+                                    height="100%"
+                                    style={{ border: 0 }}
+                                    loading="lazy"
+                                    allowFullScreen
+                                    referrerPolicy="no-referrer-when-downgrade"
+                                    src={trip.map_query 
+                                        ? `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodeURIComponent(trip.map_query)}` 
+                                        : `https://www.google.com/maps/embed/v1/view?key=${apiKey}&center=${trip.lat},${trip.lng}&zoom=14`}
+                                ></iframe>
                             ) : (
                                 <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px', textAlign: 'center', color: 'var(--text-dim)', background: 'rgba(255,255,255,0.02)' }}>
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" style={{ width: '64px', height: '64px', marginBottom: '15px', opacity: 0.3 }}>
@@ -59,8 +55,16 @@ const TripDetail = ({ trip, onBack, onEdit, onDelete, apiKey }) => {
                     <section className="article-specs">
                         <h3>Location Details</h3>
                         <div className="specs-grid">
-                            <div className="spec-item"><label>Latitude</label><span>{trip.lat?.toFixed(6)}</span></div>
-                            <div className="spec-item"><label>Longitude</label><span>{trip.lng?.toFixed(6)}</span></div>
+                            {trip.map_query ? (
+                                <div className="spec-item" style={{ gridColumn: '1 / -1' }}><span>{trip.map_query}</span></div>
+                            ) : trip.lat && trip.lng ? (
+                                <>
+                                    <div className="spec-item"><label>Latitude</label><span>{trip.lat?.toFixed(6)}</span></div>
+                                    <div className="spec-item"><label>Longitude</label><span>{trip.lng?.toFixed(6)}</span></div>
+                                </>
+                            ) : (
+                                <div className="spec-item" style={{ gridColumn: '1 / -1' }}><label>Status</label><span>No detailed location data</span></div>
+                            )}
                         </div>
                     </section>
 
@@ -113,7 +117,7 @@ const TripDetail = ({ trip, onBack, onEdit, onDelete, apiKey }) => {
     );
 };
 
-const FishingTrips = ({ selectedTripId, onTripSelectionHandled }) => {
+const FishingTrips = ({ selectedTripId, onTripSelectionHandled, mapsApiKey }) => {
     const [trips, setTrips] = useState([]);
     const [showAddForm, setShowAddForm] = useState(false);
     const [selectedPlace, setSelectedPlace] = useState(null);
@@ -130,7 +134,8 @@ const FishingTrips = ({ selectedTripId, onTripSelectionHandled }) => {
         total_cost: 0,
         lat: null,
         lng: null,
-        links: []
+        links: [],
+        map_query: ''
     });
 
 
@@ -166,7 +171,7 @@ const FishingTrips = ({ selectedTripId, onTripSelectionHandled }) => {
         }
 
         // Reset form
-        setNewTrip({ location: '', start_date: '', end_date: '', notes: '', total_cost: 0, lat: null, lng: null, links: [] });
+        setNewTrip({ location: '', start_date: '', end_date: '', notes: '', total_cost: 0, lat: null, lng: null, links: [], map_query: '' });
         setTempLink('');
         setSelectedPlace(null);
         setMarkerPosition(null);
@@ -185,7 +190,8 @@ const FishingTrips = ({ selectedTripId, onTripSelectionHandled }) => {
             total_cost: trip.total_cost,
             lat: trip.lat,
             lng: trip.lng,
-            links: trip.links || []
+            links: trip.links || [],
+            map_query: trip.map_query || ''
         });
 
         if (trip.lat && trip.lng) {
@@ -201,7 +207,7 @@ const FishingTrips = ({ selectedTripId, onTripSelectionHandled }) => {
 
     const openNewTripForm = () => {
         setEditingId(null);
-        setNewTrip({ location: '', start_date: '', end_date: '', notes: '', total_cost: 0, lat: null, lng: null, links: [] });
+        setNewTrip({ location: '', start_date: '', end_date: '', notes: '', total_cost: 0, lat: null, lng: null, links: [], map_query: '' });
         setTempLink('');
         setSelectedPlace(null);
         setMarkerPosition(null);
@@ -223,6 +229,7 @@ const FishingTrips = ({ selectedTripId, onTripSelectionHandled }) => {
                 onBack={() => setSelectedTrip(null)}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
+                apiKey={mapsApiKey}
             />
         );
     }
@@ -257,6 +264,7 @@ const FishingTrips = ({ selectedTripId, onTripSelectionHandled }) => {
                     onSubmit={handleAdd}
                     onCancel={() => setShowAddForm(false)}
                     editingId={editingId}
+                    mapsApiKey={mapsApiKey}
                 />
             </Modal>
 

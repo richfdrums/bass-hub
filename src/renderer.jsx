@@ -60,6 +60,7 @@ const App = () => {
         return <FishingTrips
           selectedTripId={selectedTripId}
           onTripSelectionHandled={() => setSelectedTripId(null)}
+          mapsApiKey={mapsApiKey}
         />;
       case 'links':
         return <QuickLinks />;
