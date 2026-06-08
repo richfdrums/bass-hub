@@ -1,6 +1,8 @@
 # Bass Hub
 
-A comprehensive fishing gear and trip management application built with Electron.
+A comprehensive fishing gear and trip management application built with Electron and React.
+
+Entirely vibe coded using Google's Antigravity IDE and its built-in agentic coding manager.
 
 ## Features
 
