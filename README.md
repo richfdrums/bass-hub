@@ -6,10 +6,37 @@ Entirely vibe coded using Google's Antigravity IDE and its built-in agentic codi
 
 ## Features
 
-- **Gear Catalog**: Manage your fishing rods, reels, lures, line, and terminal tackle
-- **Trip Planning**: Log and plan fishing trips with location mapping
-- **Quick Links**: Save useful fishing resources and websites
-- **Smart Add**: Extract gear details automatically from product URLs
+### Dashboard
+Application entry point.  Displays simple widgets for gear catalog, trips, links, and an interactive tides module for Port Royal on the Rappahannock River.
+
+![dashboard screenshot](doc/dashboard.png)
+
+### Gear Catalog
+Manage your fishing rods, reels, lures, line, and terminal tackle.  Differentiates between owned gear and like-to-have (wishlist).  Features "smart add" functionality in which metadata information can be ingested from a provided product page URL (e.g., on Tackle Warehouse or BPS).
+
+![gear catalog screenshot](doc/gear-catalog.png)
+![gear catalog screenshot](doc/gear-smart-add-1.png)
+![gear catalog screenshot](doc/gear-smart-add-2.png)
+
+### Trip Planning
+Log and plan fishing trips with location mapping
+
+![trips screenshot](doc/trips.png)
+![trips screenshot](doc/trip-detail.png)
+![trips screenshot](doc/trip-edit.png)
+![trips screenshot](doc/trip-add.png)
+
+### Links
+Save useful fishing resources and website links
+
+![links screenshot](doc/links.png)
+![links screenshot](doc/link-add.png)
+
+### Settings
+Allows for configuration of Google Maps API key (for Trips pages) and local DB export and restore.
+
+![settings screenshot](doc/settings.png)
+
 
 ## Setup
 
