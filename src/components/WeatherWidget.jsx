@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
 const LOCATIONS = {
@@ -198,6 +198,7 @@ const WeatherWidget = () => {
     const [expandedDate, setExpandedDate] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
+    const listRef = useRef(null);
 
     useEffect(() => {
         const loadLocation = async () => {
@@ -255,6 +256,24 @@ const WeatherWidget = () => {
         setExpandedDate(null);
         window.fishingApi.updateSetting(SETTING_KEY, key);
     };
+
+    // Scroll the list (not the page) so a newly expanded day is fully visible,
+    // without pushing its header row above the top of the list
+    useEffect(() => {
+        const list = listRef.current;
+        if (!expandedDate || !list) return;
+        const dayEl = list.querySelector(`[data-date="${expandedDate}"]`);
+        if (!dayEl) return;
+
+        const listRect = list.getBoundingClientRect();
+        const dayRect = dayEl.getBoundingClientRect();
+        if (dayRect.top < listRect.top) {
+            list.scrollBy({ top: dayRect.top - listRect.top, behavior: 'smooth' });
+        } else if (dayRect.bottom > listRect.bottom) {
+            const offset = Math.min(dayRect.bottom - listRect.bottom, dayRect.top - listRect.top);
+            list.scrollBy({ top: offset, behavior: 'smooth' });
+        }
+    }, [expandedDate]);
 
     const toggleDay = (date) => {
         setExpandedDate((current) => (current === date ? null : date));
@@ -323,13 +342,13 @@ const WeatherWidget = () => {
                     <button className="btn-secondary" onClick={() => fetchWeather(locationKey)}>Retry</button>
                 </div>
             ) : forecast.length > 0 ? (
-                <div className="weather-list">
+                <div className="weather-list" ref={listRef}>
                     {forecast.map((day, index) => {
                         const label = formatDayLabel(day.date, index);
                         const { icon, text } = describeCode(day.code, true);
                         const isOpen = expandedDate === day.date;
                         return (
-                            <div key={day.date} className={`weather-day ${isOpen ? 'open' : ''}`}>
+                            <div key={day.date} data-date={day.date} className={`weather-day ${isOpen ? 'open' : ''}`}>
                                 <div className="weather-row" onClick={() => toggleDay(day.date)} title={text}>
                                     <div className="weather-date">
                                         <span className="weather-weekday">{label.weekday}</span>
