@@ -1648,6 +1648,12 @@ textarea,
   row-gap: 0;
 }
 
+/* Widgets must size to their content; a percentage height (e.g. .tide-widget's
+   height: 100%) would follow the span and grow without bound */
+.dashboard .grid > * {
+  height: auto;
+}
+
 /* Weather Widget Styles */
 .weather-widget {
   min-width: 280px;
