@@ -1,10 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import TideWidget from './TideWidget';
+import WeatherWidget from './WeatherWidget';
 
 const Dashboard = ({ setActiveTab, navigateToSmartAdd, navigateToTripDetail }) => {
     const [stats, setStats] = useState({ gearCount: 0, tripCount: 0, linkCount: 0 });
     const [nextTrip, setNextTrip] = useState(null);
     const [daysUntil, setDaysUntil] = useState(null);
+    const gridRef = useRef(null);
+
+    // Masonry layout: each widget spans as many small grid rows as its height needs,
+    // so a short widget isn't padded out to the height of a tall one beside it.
+    useEffect(() => {
+        const grid = gridRef.current;
+        if (!grid) return;
+
+        const layout = () => {
+            const styles = getComputedStyle(grid);
+            const rowHeight = parseFloat(styles.gridAutoRows);
+            const gap = parseFloat(styles.getPropertyValue('--masonry-gap'));
+            Array.from(grid.children).forEach((child) => {
+                const span = Math.ceil((child.offsetHeight + gap) / rowHeight);
+                child.style.gridRowEnd = `span ${span}`;
+            });
+        };
+
+        const observer = new ResizeObserver(layout);
+        Array.from(grid.children).forEach((child) => observer.observe(child));
+        return () => observer.disconnect();
+    }, []);
 
     useEffect(() => {
         const loadStats = async () => {
@@ -57,7 +80,7 @@ const Dashboard = ({ setActiveTab, navigateToSmartAdd, navigateToTripDetail }) =
 
     return (
         <div className="dashboard">
-            <div className="grid">
+            <div className="grid" ref={gridRef}>
                 <div className="widget" onClick={() => setActiveTab('gear')}>
                     <div className="widget-header">
                         <h3>Gear Catalog</h3>
@@ -84,6 +107,7 @@ const Dashboard = ({ setActiveTab, navigateToSmartAdd, navigateToTripDetail }) =
                     <p className="big-number">{stats.linkCount}</p>
                     <p>useful resources saved</p>
                 </div>
+                <WeatherWidget />
                 <TideWidget />
             </div>
         </div>
