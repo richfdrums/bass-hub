@@ -295,6 +295,11 @@ ipcMain.handle('get-maps-api-key', () => {
   return process.env.GOOGLE_MAPS_API_KEY || '';
 });
 
+ipcMain.handle('get-setting', (event, key) => {
+  const row = db.getSetting(key);
+  return row ? row.value : null;
+});
+
 ipcMain.handle('update-setting', (event, key, value) => {
   return db.setSetting(key, value);
 });

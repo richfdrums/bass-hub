@@ -23,5 +23,6 @@ contextBridge.exposeInMainWorld('fishingApi', {
     getMapsApiKey: () => ipcRenderer.invoke('get-maps-api-key'),
     exportDatabase: () => ipcRenderer.invoke('export-database'),
     importDatabase: () => ipcRenderer.invoke('import-database'),
+    getSetting: (key) => ipcRenderer.invoke('get-setting', key),
     updateSetting: (key, value) => ipcRenderer.invoke('update-setting', key, value)
 });

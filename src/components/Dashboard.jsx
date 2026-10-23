@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import TideWidget from './TideWidget';
+import WeatherWidget from './WeatherWidget';
 
 const Dashboard = ({ setActiveTab, navigateToSmartAdd, navigateToTripDetail }) => {
     const [stats, setStats] = useState({ gearCount: 0, tripCount: 0, linkCount: 0 });
@@ -85,6 +86,7 @@ const Dashboard = ({ setActiveTab, navigateToSmartAdd, navigateToTripDetail }) =
                     <p>useful resources saved</p>
                 </div>
                 <TideWidget />
+                <WeatherWidget />
             </div>
         </div>
     );
