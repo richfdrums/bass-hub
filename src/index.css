@@ -1532,6 +1532,7 @@ textarea,
 .tide-widget {
   min-width: 280px;
   height: 100%;
+  cursor: default;
 }
 
 .tide-list {
