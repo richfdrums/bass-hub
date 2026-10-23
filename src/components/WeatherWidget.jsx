@@ -286,15 +286,24 @@ const WeatherWidget = () => {
             <div className="widget-header">
                 <h3>Weather</h3>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <select
-                        className="weather-location-select"
-                        value={locationKey || DEFAULT_LOCATION}
-                        onChange={handleLocationChange}
-                    >
-                        {Object.entries(LOCATIONS).map(([key, loc]) => (
-                            <option key={key} value={key}>{loc.name}</option>
-                        ))}
-                    </select>
+                    <div className="weather-location">
+                        <svg className="weather-location-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z" />
+                            <circle cx="12" cy="9.5" r="2.5" />
+                        </svg>
+                        <select
+                            className="weather-location-select"
+                            value={locationKey || DEFAULT_LOCATION}
+                            onChange={handleLocationChange}
+                        >
+                            {Object.entries(LOCATIONS).map(([key, loc]) => (
+                                <option key={key} value={key}>{loc.name}</option>
+                            ))}
+                        </select>
+                        <svg className="weather-location-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M6 9l6 6 6-6" />
+                        </svg>
+                    </div>
                     <button className="widget-action" onClick={() => locationKey && fetchWeather(locationKey)} title="Refresh">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ width: '14px', height: '14px' }}>
                             <path d="M21 12a9 9 0 11-9-9c2.52 0 4.85.83 6.72 2.25L21 8m0-5v5h-5" />
