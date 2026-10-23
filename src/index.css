@@ -1640,6 +1640,14 @@ textarea,
   align-items: start;
 }
 
+/* Dashboard masonry: rows are small fixed steps and Dashboard.jsx sets each
+   widget's row span from its height; the vertical gap is folded into the span */
+.dashboard .grid {
+  --masonry-gap: 24px;
+  grid-auto-rows: 4px;
+  row-gap: 0;
+}
+
 /* Weather Widget Styles */
 .weather-widget {
   min-width: 280px;
