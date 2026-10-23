@@ -107,8 +107,8 @@ const Dashboard = ({ setActiveTab, navigateToSmartAdd, navigateToTripDetail }) =
                     <p className="big-number">{stats.linkCount}</p>
                     <p>useful resources saved</p>
                 </div>
-                <TideWidget />
                 <WeatherWidget />
+                <TideWidget />
             </div>
         </div>
     );
