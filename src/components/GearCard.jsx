@@ -1,4 +1,5 @@
 import React from 'react';
+import GearImage, { gearImageSrc } from './GearImage';
 
 const CATEGORIES = {
     RODS: 'Rods',
@@ -11,11 +12,11 @@ const CATEGORIES = {
 const GearCard = ({ item, onImageClick, onTitleClick, onEdit, onDelete }) => {
     return (
         <div className="gear-card refined">
-            {item.image_path && (
-                <div className="card-image" onClick={() => onImageClick(item.image_path)} style={{ cursor: 'pointer' }}>
-                    <img src={`file://${item.image_path}`} alt={item.model} />
-                </div>
-            )}
+            <GearImage
+                item={item}
+                className="card-image"
+                onClick={() => onImageClick(gearImageSrc(item))}
+            />
             <div className="card-content">
                 <div className="card-header">
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>

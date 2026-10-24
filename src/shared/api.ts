@@ -100,15 +100,17 @@ export interface CoreApi {
 
   getSetting(key: string): Promise<string | null>;
   updateSetting(key: string, value: string): Promise<RunResult>;
+
+  /** Scrapes a product page. Network work, but platform-neutral (global fetch). */
+  extractGearDetails(url: string): Promise<ExtractResult>;
+  /** Best-effort page title for prefill; '' on failure. */
+  fetchPageTitle(url: string): Promise<string>;
 }
 
-/** Desktop-only extras, for now. Phase 2 moves extract/download into core. */
+/** Desktop-only extras. The iPad has no file system picker or native dialogs. */
 export interface DesktopApi {
   saveImage(filePath: string): Promise<string | null>;
-  extractGearDetails(url: string): Promise<ExtractResult>;
-  downloadImage(url: string): Promise<string | null>;
   getFilePath(file: File): string;
-  fetchPageTitle(url: string): Promise<string>;
   getMapsApiKey(): Promise<string>;
   exportDatabase(): Promise<FileResult>;
   importDatabase(): Promise<FileResult>;

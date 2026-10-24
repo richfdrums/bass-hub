@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
 import GearCard from './GearCard';
+import GearImage from './GearImage';
 import GearForm from './GearForm';
 
 const CATEGORIES = {
@@ -37,11 +38,7 @@ const GearDetail = ({ item, onBack, onEdit, onDelete }) => {
                 </header>
 
                 <div className="article-content">
-                    {item.image_path && (
-                        <figure className="article-image">
-                            <img src={`file://${item.image_path}`} alt={item.model} />
-                        </figure>
-                    )}
+                    <GearImage item={item} className="article-image" />
 
                     <section className="article-specs">
                         <h3>Specifications</h3>
@@ -237,11 +234,6 @@ const GearCatalog = ({ initialShowSmartAdd, onSmartAddHandled, initialUrl, initi
 
         if (result.success) {
             const extractedData = result.data;
-            let localImagePath = null;
-
-            if (extractedData.extracted_image_url) {
-                localImagePath = await window.fishingApi.downloadImage(extractedData.extracted_image_url);
-            }
 
             const currentWishlistStatus = formData.is_wishlist !== undefined ? formData.is_wishlist : (activeList === LIST_TYPES.WISHLIST ? 1 : 0);
             const useWishlist = targetListType ? (targetListType === 'Wishlist' ? 1 : 0) : currentWishlistStatus;
@@ -252,7 +244,10 @@ const GearCatalog = ({ initialShowSmartAdd, onSmartAddHandled, initialUrl, initi
 
             setFormData({
                 ...extractedData,
-                image_path: localImagePath || formData.image_path,
+                // Hotlinked, not copied: the URL is stored and rendered directly.
+                // A local image_path (user override) still wins if one is set.
+                image_url: extractedData.extracted_image_url || null,
+                image_path: formData.image_path,
                 is_wishlist: useWishlist,
                 url: urlToProcess
             });
@@ -381,7 +376,7 @@ const GearCatalog = ({ initialShowSmartAdd, onSmartAddHandled, initialUrl, initi
             {lightboxImage && (
                 <div className="lightbox-modal" onClick={() => setLightboxImage(null)}>
                     <div className="lightbox-content" onClick={e => e.stopPropagation()}>
-                        <img src={`file://${lightboxImage}`} alt="Full size" />
+                        <img src={lightboxImage} alt="Full size" />
                         <button className="lightbox-close" onClick={() => setLightboxImage(null)}>×</button>
                     </div>
                 </div>

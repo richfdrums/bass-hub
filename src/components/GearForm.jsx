@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { gearImageSrc } from './GearImage';
 
 const CATEGORIES = {
     RODS: 'Rods',
@@ -73,7 +74,7 @@ const GearForm = ({
 
     const imageUpload = (
         <div
-            className={`image-upload-zone ${dragActive ? 'active' : ''} ${formData.image_path ? 'has-image' : ''}`}
+            className={`image-upload-zone ${dragActive ? 'active' : ''} ${formData.image_path || formData.image_url ? 'has-image' : ''}`}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
@@ -87,10 +88,10 @@ const GearForm = ({
                 onChange={(e) => handleFile(e.target.files[0])}
                 accept="image/*"
             />
-            {formData.image_path ? (
+            {gearImageSrc(formData) ? (
                 <div className="preview-container">
-                    <img src={`file://${formData.image_path}`} alt="Preview" />
-                    <button type="button" className="remove-img" onClick={(e) => { e.stopPropagation(); setFormData({ ...formData, image_path: null }) }}>×</button>
+                    <img src={gearImageSrc(formData)} alt="Preview" />
+                    <button type="button" className="remove-img" onClick={(e) => { e.stopPropagation(); setFormData({ ...formData, image_path: null, image_url: null }) }}>×</button>
                 </div>
             ) : (
                 <div className="upload-placeholder">

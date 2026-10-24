@@ -11,7 +11,6 @@ const api: Api = {
   deleteGear: (id) => ipcRenderer.invoke('delete-gear', id),
   saveImage: (filePath) => ipcRenderer.invoke('save-image', filePath),
   extractGearDetails: (url) => ipcRenderer.invoke('extract-gear-details', url),
-  downloadImage: (url) => ipcRenderer.invoke('download-image', url),
   getFilePath: (file) => webUtils.getPathForFile(file),
 
   getTrips: () => ipcRenderer.invoke('get-trips'),
