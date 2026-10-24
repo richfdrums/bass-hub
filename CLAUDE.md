@@ -35,7 +35,7 @@ Components call `window.fishingApi.*` directly; there is no state library — ea
 
 **Smart Extract** (`extract-gear-details` in `main.js`): axios + cheerio scrape of a product URL with selectors tuned for Tackle Warehouse first, then generic `itemprop`/OpenGraph fallbacks. Brand falls back to a hardcoded brand list matched against the title; category is inferred by an ordered keyword cascade (Rods → Reels → Lures → Terminal Tackle → Fishing Line). The renderer (`GearCatalog.jsx`) then calls `download-image` for the extracted image URL.
 
-**Maps**: The Google Maps key is resolved in `get-maps-api-key` — `settings` table (`google_maps_api_key`, set from the Settings view) takes precedence over `GOOGLE_MAPS_API_KEY` in `.env` (loaded by `dotenv` in main). `renderer.jsx` waits for the key before rendering and only wraps the app in `<APIProvider>` if a key exists. Trip display uses the Google Maps **Embed API** iframes (`trips.map_query`, falling back to lat/lng); `TripForm` still uses `@vis.gl/react-google-maps` with `PlaceAutocomplete`/`MapHandler` for picking a location. Components must handle the no-key case.
+**Maps**: The Google Maps key is resolved in `get-maps-api-key` — `settings` table (`google_maps_api_key`, set from the Settings view) takes precedence over `GOOGLE_MAPS_API_KEY` in `.env` (loaded by `dotenv` in main). `renderer.jsx` waits for the key before rendering and only wraps the app in `<APIProvider>` if a key exists. Trip display and the trip form both use Google Maps **Embed API** iframes (`trips.map_query`, falling back to lat/lng); there are no interactive map components. Components must handle the no-key case.
 
 **Tides**: `TideWidget.jsx` calls the NOAA CO-OPS API directly from the renderer for a hardcoded station (8635299).
 
