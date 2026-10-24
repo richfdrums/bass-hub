@@ -1,75 +1,33 @@
-# Bass Hub - Project Context for AI Agents
+# Bass Hub — Agent Guide
 
-## Overview
-**Bass Hub** is a specialized desktop application designed for bass fishing enthusiasts. It allows users to track their fishing gear inventory, plan and log fishing trips, and organize useful web resources. The application is built as a standalone local-first tool using Electron.
+Local-first Electron + React desktop app for bass anglers: gear inventory (owned + wishlist), trip planning/logging, quick links, and tide/weather dashboard widgets. `README.md` is user-facing; `CLAUDE.md` has a longer architecture write-up that is still accurate.
 
-## Technology Stack
--   **Runtime**: Electron (Node.js + Chromium), packaged with Electron Forge
--   **Frontend**: React (via Vite), Plain CSS
--   **Database**: SQLite (`better-sqlite3`) - Local data storage
--   **Maps & Location**: Google Maps Platform (Maps JS + Places via `@vis.gl/react-google-maps`, Maps Embed API)
--   **Tides**: NOAA CO-OPS Tides & Currents API
--   **Utilities**: `cheerio` & `axios` (Web scraping for product extraction)
+## Commands
 
-## Architecture & patterns
+- `npm start` — Electron Forge + Vite. The renderer hot-reloads, but changes to `src/main.js`, `src/preload.js`, `src/db.js`, or Vite/Forge config require a full restart.
+- `npm run package` — builds `out/Bass Hub-darwin-arm64/Bass Hub.app` (see `.claude/skills/package-app` for the full packaging workflow).
+- `npm run make` — distributables; macOS zip is the primary target, squirrel/deb/rpm makers are also configured.
+- `npm run lint` — a no-op `echo`. There are no tests, no linter, no TypeScript. Verify changes by running the app and exercising the affected view.
+- Fresh worktree: run `npm install` first. Forge rebuilds the `better-sqlite3` native module for Electron on `start`/`package`.
 
-### 1. Process Separation
--   **Main Process (`src/main.js`)**:
-    -   Handles application lifecycle and window creation.
-    -   Manages SQLite database connections (`src/db.js`).
-    -   Executes "heavy" operations like web scraping for the Smart Extract feature, image downloads, and page-title fetching.
-    -   Handles database backup/restore via native file dialogs.
-    -   Resolves the Google Maps API key: the `google_maps_api_key` row in the `settings` table takes precedence over `GOOGLE_MAPS_API_KEY` in `.env`. The key is stored as plain text (not encrypted).
--   **Renderer Process (`src/renderer.jsx`)**:
-    -   React-based UI. No router: `App` holds an `activeTab` state and switches between views.
-    -   Communicates with Main via `window.fishingApi` (Context Bridge).
-    -   **Critical**: Waits for the Maps API key from Main before rendering, then wraps the app in `<APIProvider>` *only* if a key exists.
+## Architecture
 
-### 2. Data Persistence
--   Data is stored in a local SQLite file (`fishing_hub_v6.db` in Electron's `userData` directory).
--   Gear images are copied/downloaded into `userData/gear_images/`; the absolute path is stored in `gear.image_path`.
--   **Schema**:
-    -   `gear`: Inventory items (Rods, Reels, Lures, Fishing Line, Terminal Tackle). One wide table with category-specific columns; `is_wishlist` separates owned gear from the wishlist.
-    -   `trips`: Fishing logs with location data (lat/lng, `map_query`) and a `links` column stored as JSON.
-    -   `quick_links`: Bookmarks for external sites, grouped by `category`.
-    -   `settings`: App configuration (e.g., Google Maps API Key).
--   **Migrations**: Schema changes are added in `db.js` as `ALTER TABLE ... ADD COLUMN` wrapped in try/catch. New gear columns must also be added to the `gearColumns` whitelist.
+- Forge's Vite plugin (`forge.config.js`) builds three bundles: main (`src/main.js`), preload (`src/preload.js`), and renderer (`index.html` → `src/renderer.jsx`).
+- Adding IPC touches three files: helper in `src/db.js` → `ipcMain.handle('kebab-case', ...)` in `src/main.js` → `contextBridge` method in `src/preload.js`. Components call `window.fishingApi.*` directly; there is no state library, so each top-level view loads its own data.
+- No router. `src/renderer.jsx` holds `activeTab`; cross-view navigation uses one-shot flags/IDs in `App` state plus an `on...Handled` callback that clears them.
+- `src/db.js` opens `fishing_hub_v6.db` in `app.getPath('userData')` at import time. The same filename is hardcoded again in `main.js` export/import handlers — change both if it ever moves.
+- Schema is `CREATE TABLE IF NOT EXISTS` at module load; later changes are `ALTER TABLE ... ADD COLUMN` in try/catch below it. Gear inserts/updates use the `gearColumns` whitelist: a new gear column must be added to both the migration and that array, or it is silently dropped.
+- `trips.links` is a JSON string parsed in `getTrips`. `gear` is one wide table with category-specific nullable columns; `is_wishlist` separates owned gear from the wishlist.
+- Gear images are copied/downloaded into `userData/gear_images/` with the absolute path in `gear.image_path`. The renderer displays them as `file://` URLs, which is why the BrowserWindow sets `webSecurity: false`; don't re-enable it without reworking image display.
+- Native modules: `better-sqlite3` is externalized in `vite.main.config.mjs` and copied along with `bindings` / `file-uri-to-path` by `vite-plugin-static-copy`; `plugin-auto-unpack-natives` unpacks it from the asar. A new native dependency needs the same treatment or it will fail only in packaged builds.
+- Styling is one plain-CSS file, `src/index.css`, using dark-theme variables. The window uses `titleBarStyle: 'hiddenInset'`; `.titlebar-drag-region` in `App` is the drag area.
 
-### 3. Key Features
--   **Smart Extract**: Users paste a product URL -> Main scrapes the page (Tackle Warehouse-specific selectors first, then `itemprop`/OpenGraph fallbacks) and infers brand and category -> Auto-fills the Gear Form and downloads the product image. Logic resides in `main.js`.
--   **Map Integration**:
-    -   Trip pages display maps using Google Maps Embed API iframes (driven by `trips.map_query`, falling back to lat/lng).
-    -   The trip form uses `@vis.gl/react-google-maps` (with Places autocomplete) for picking a location.
-    -   Includes fallback UI ("Map Unavailable") if the user hasn't provided an API key.
--   **Tide Predictions**: Dashboard widget showing high/low tides for NOAA station 8635299 (Port Royal, Rappahannock River).
--   **Backup & Restore**: Settings can export the DB file or restore from one (restore overwrites the DB and relaunches the app).
+## Feature gotchas
 
-## Directory Structure
--   `src/`
-    -   `assets/`: Images and branding (Logo, App Icon).
-    -   `components/`: Reusable React components.
-        -   `Dashboard.jsx`: Landing view with summary widgets and `TideWidget.jsx`.
-        -   `GearCatalog.jsx`: Main inventory view; handles "Smart Extract" flows.
-        -   `FishingTrips.jsx`: Management of past/future trips.
-        -   `QuickLinks.jsx`: Bookmark management.
-        -   `Settings.jsx`: Google Maps API key and database backup/restore.
-    -   `db.js`: Database initialization, schema definitions, and helper methods.
-    -   `main.js`: IPC handlers and backend logic.
-    -   `preload.js`: Defines the `window.fishingApi` bridge.
-    -   `renderer.jsx`: App entry point; handles API key loading state.
-
-## Development & Build
--   **Run Locally**: `npm start`
--   **Package**: `npm run package`
--   **Build Distributable**: `npm run make`
-    -   Primary target: macOS `.zip` (Squirrel, deb, and rpm makers are also configured).
-    -   **Important**: `better-sqlite3` is external in `vite.main.config.mjs` and copied into the build (with `bindings` and `file-uri-to-path`) via `vite-plugin-static-copy`; `plugin-auto-unpack-natives` unpacks it from the asar.
--   No tests or linter are configured.
-
-## Common Tasks & Rules
--   **Adding IPC**: Add DB helper in `db.js` (if needed), handler in `main.js`, expose in `preload.js` whitelist, consume in React components.
--   **Styling**: Use `index.css` for app-wide variables (colors, fonts). Maintain the dark/premium aesthetic.
--   **Icons**: The app uses a custom "Squircle" icon. The sidebar logo is `src/assets/logo.png`; the packaged app icon is `src/assets/icon.icns`.
-
-## recent_history.md
-*(Agent Note: Check this file if present for specific user session context)*
+- **Maps key**: `settings.google_maps_api_key` (set in Settings) takes precedence over `GOOGLE_MAPS_API_KEY` from `.env` (dotenv, loaded in main only). `renderer.jsx` waits for the key and only wraps the app in `<APIProvider>` when it is non-empty, so every map view needs a no-key fallback. A newly saved key only takes effect after an app restart.
+- **Trip maps** are Google Maps **Embed API** iframes (`trips.map_query`, falling back to lat/lng), so the Cloud project needs the Embed API enabled in addition to Maps JS/Places. `TripForm`/`FishingTrips` still import `Map`, `AdvancedMarker`, `PlaceAutocomplete`, and `MapHandler` but render iframes — that interactive-map path is dead code. `leaflet`/`react-leaflet` are unused dependencies, and `index.html` still links Leaflet CSS.
+- **Smart Extract** (`extract-gear-details` in `main.js`): axios + cheerio scrape with Tackle Warehouse selectors first, then `itemprop`/OpenGraph fallbacks. Brand comes from a hardcoded brand list, category from an ordered keyword cascade; `GearCatalog.jsx` then calls `download-image`. Scrapers are brittle — retest against a real product URL when touching them.
+- **Tides**: `TideWidget.jsx` calls NOAA CO-OPS directly from the renderer for hardcoded station 8635299.
+- **Weather**: `WeatherWidget.jsx` calls Open-Meteo directly from the renderer. Locations are hardcoded in `LOCATIONS`; the selected one persists in `settings.weather_location`.
+- **Dashboard masonry**: `Dashboard.jsx` sets each widget's `gridRowEnd` from its measured height. Dashboard widgets must size to content — percentage heights break the layout (see the `.dashboard .grid > *` comment in `index.css`).
+- **Backup/restore** uses native dialogs; restore overwrites the DB file and calls `app.relaunch()`. The packaged app shares the same `userData` database, and builds are unsigned.
