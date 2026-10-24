@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Map, AdvancedMarker } from '@vis.gl/react-google-maps';
 import Modal from './Modal';
 import TripCard from './TripCard';
 import TripForm from './TripForm';
@@ -120,8 +119,6 @@ const TripDetail = ({ trip, onBack, onEdit, onDelete, apiKey }) => {
 const FishingTrips = ({ selectedTripId, onTripSelectionHandled, mapsApiKey }) => {
     const [trips, setTrips] = useState([]);
     const [showAddForm, setShowAddForm] = useState(false);
-    const [selectedPlace, setSelectedPlace] = useState(null);
-    const [markerPosition, setMarkerPosition] = useState(null);
     const [editingId, setEditingId] = useState(null);
     const [selectedTrip, setSelectedTrip] = useState(null);
     const [tempLink, setTempLink] = useState('');
@@ -173,8 +170,6 @@ const FishingTrips = ({ selectedTripId, onTripSelectionHandled, mapsApiKey }) =>
         // Reset form
         setNewTrip({ location: '', start_date: '', end_date: '', notes: '', total_cost: 0, lat: null, lng: null, links: [], map_query: '' });
         setTempLink('');
-        setSelectedPlace(null);
-        setMarkerPosition(null);
         setEditingId(null);
         setShowAddForm(false);
         loadTrips();
@@ -194,13 +189,6 @@ const FishingTrips = ({ selectedTripId, onTripSelectionHandled, mapsApiKey }) =>
             map_query: trip.map_query || ''
         });
 
-        if (trip.lat && trip.lng) {
-            setMarkerPosition({ lat: trip.lat, lng: trip.lng });
-        } else {
-            setMarkerPosition(null);
-        }
-
-        setSelectedPlace(null);
         setSelectedTrip(null);
         setShowAddForm(true);
     };
@@ -209,8 +197,6 @@ const FishingTrips = ({ selectedTripId, onTripSelectionHandled, mapsApiKey }) =>
         setEditingId(null);
         setNewTrip({ location: '', start_date: '', end_date: '', notes: '', total_cost: 0, lat: null, lng: null, links: [], map_query: '' });
         setTempLink('');
-        setSelectedPlace(null);
-        setMarkerPosition(null);
         setShowAddForm(true);
     };
 
@@ -257,10 +243,6 @@ const FishingTrips = ({ selectedTripId, onTripSelectionHandled, mapsApiKey }) =>
                     setNewTrip={setNewTrip}
                     tempLink={tempLink}
                     setTempLink={setTempLink}
-                    selectedPlace={selectedPlace}
-                    setSelectedPlace={setSelectedPlace}
-                    markerPosition={markerPosition}
-                    setMarkerPosition={setMarkerPosition}
                     onSubmit={handleAdd}
                     onCancel={() => setShowAddForm(false)}
                     editingId={editingId}

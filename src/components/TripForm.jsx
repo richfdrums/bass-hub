@@ -1,24 +1,15 @@
-import React, { useState } from 'react';
-import { Map, AdvancedMarker } from '@vis.gl/react-google-maps';
-import PlaceAutocomplete from './PlaceAutocomplete';
-import MapHandler from './MapHandler';
+import React from 'react';
 
 const TripForm = ({
     newTrip,
     setNewTrip,
     tempLink,
     setTempLink,
-    selectedPlace,
-    setSelectedPlace,
-    markerPosition,
-    setMarkerPosition,
     onSubmit,
     onCancel,
     editingId,
     mapsApiKey
 }) => {
-    const defaultCenter = { lat: 39.8283, lng: -98.5795 };
-
     const addLink = () => {
         if (!tempLink) return;
         setNewTrip(prev => ({
@@ -34,41 +25,6 @@ const TripForm = ({
             links: prev.links.filter((_, i) => i !== index)
         }));
     };
-
-    const onPlaceSelect = (place) => {
-        setSelectedPlace(place);
-
-        const locationName = place.name || place.formatted_address || '';
-        const lat = place.geometry?.location?.lat();
-        const lng = place.geometry?.location?.lng();
-
-        if (lat && lng) {
-            setMarkerPosition({ lat, lng });
-            setNewTrip(prev => ({
-                ...prev,
-                location: locationName,
-                lat: lat,
-                lng: lng
-            }));
-        } else {
-            setNewTrip(prev => ({
-                ...prev,
-                location: locationName
-            }));
-        }
-    };
-
-    const handleMapClick = (ev) => {
-        const { latLng } = ev.detail;
-        if (latLng) {
-            const lat = latLng.lat;
-            const lng = latLng.lng;
-            setMarkerPosition({ lat, lng });
-            setNewTrip(prev => ({ ...prev, lat, lng }));
-        }
-    };
-
-    const mapCenter = markerPosition || defaultCenter;
 
     return (
         <form onSubmit={onSubmit}>
