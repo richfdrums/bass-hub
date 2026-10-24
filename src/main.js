@@ -4,9 +4,10 @@ import fs from 'node:fs';
 import started from 'electron-squirrel-startup';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import db from './db.js';
+import { backend, initBackend } from './core/backend';
+import { openElectronDb } from './main/platform/electronDb';
+import { platform } from './core/platform';
 import dotenv from 'dotenv';
-
 // Load environment variables
 dotenv.config();
 
@@ -41,10 +42,10 @@ const createWindow = () => {
 };
 
 // IPC Handlers
-ipcMain.handle('get-gear', () => db.getGear());
-ipcMain.handle('add-gear', (event, gear) => db.addGear(gear));
-ipcMain.handle('update-gear', (event, id, gear) => db.updateGear(id, gear));
-ipcMain.handle('delete-gear', (event, id) => db.deleteGear(id));
+ipcMain.handle('get-gear', () => backend.getGear());
+ipcMain.handle('add-gear', (_event, gear) => backend.addGear(gear));
+ipcMain.handle('update-gear', (_event, id, gear) => backend.updateGear(id, gear));
+ipcMain.handle('delete-gear', (_event, id) => backend.deleteGear(id));
 
 ipcMain.handle('extract-gear-details', async (event, url) => {
   try {
@@ -247,22 +248,22 @@ ipcMain.handle('save-image', async (event, filePath) => {
   }
 });
 
-ipcMain.handle('get-trips', () => db.getTrips());
-ipcMain.handle('add-trip', (event, trip) => db.addTrip(trip));
-ipcMain.handle('update-trip', (event, id, trip) => db.updateTrip(id, trip));
-ipcMain.handle('delete-trip', (event, id) => db.deleteTrip(id));
+ipcMain.handle('get-trips', () => backend.getTrips());
+ipcMain.handle('add-trip', (_event, trip) => backend.addTrip(trip));
+ipcMain.handle('update-trip', (_event, id, trip) => backend.updateTrip(id, trip));
+ipcMain.handle('delete-trip', (_event, id) => backend.deleteTrip(id));
 
-ipcMain.handle('get-links', () => db.getLinks());
-ipcMain.handle('add-link', (event, link) => {
+ipcMain.handle('get-links', () => backend.getLinks());
+ipcMain.handle('add-link', (_event, link) => {
   try {
-    return db.addLink(link);
+    return backend.addLink(link);
   } catch (e) {
     console.error('FAILED TO ADD LINK:', e);
     throw e;
   }
 });
-ipcMain.handle('update-link', (event, id, link) => db.updateLink(id, link));
-ipcMain.handle('delete-link', (event, id) => db.deleteLink(id));
+ipcMain.handle('update-link', (_event, id, link) => backend.updateLink(id, link));
+ipcMain.handle('delete-link', (_event, id) => backend.deleteLink(id));
 
 ipcMain.handle('fetch-page-title', async (event, url) => {
   try {
@@ -289,24 +290,19 @@ ipcMain.handle('fetch-page-title', async (event, url) => {
   }
 });
 
-ipcMain.handle('get-maps-api-key', () => {
-  const dbKey = db.getSetting('google_maps_api_key');
-  if (dbKey && dbKey.value) return dbKey.value;
+ipcMain.handle('get-maps-api-key', async () => {
+  const dbKey = await backend.getSetting('google_maps_api_key');
+  if (dbKey) return dbKey;
   return process.env.GOOGLE_MAPS_API_KEY || '';
 });
 
-ipcMain.handle('get-setting', (event, key) => {
-  const row = db.getSetting(key);
-  return row ? row.value : null;
-});
+ipcMain.handle('get-setting', (_event, key) => backend.getSetting(key));
 
-ipcMain.handle('update-setting', (event, key, value) => {
-  return db.setSetting(key, value);
-});
+ipcMain.handle('update-setting', (_event, key, value) => backend.updateSetting(key, value));
 
 // Data Backup & Restore Handlers
 ipcMain.handle('export-database', async (event) => {
-  const dbPath = path.join(app.getPath('userData'), 'fishing_hub_v6.db');
+  const dbPath = platform().dbPath;
 
   const { filePath } = await dialog.showSaveDialog({
     title: 'Export Database Backup',
@@ -327,7 +323,7 @@ ipcMain.handle('export-database', async (event) => {
 });
 
 ipcMain.handle('import-database', async (event) => {
-  const dbPath = path.join(app.getPath('userData'), 'fishing_hub_v6.db');
+  const dbPath = platform().dbPath;
 
   const { filePaths } = await dialog.showOpenDialog({
     title: 'Select Backup to Restore',
@@ -366,7 +362,15 @@ ipcMain.handle('import-database', async (event) => {
   return { success: false, cancelled: true };
 });
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  // Open and migrate the DB before any window can issue an IPC call.
+  const dbPath = path.join(app.getPath('userData'), 'fishing_hub_v6.db');
+  await initBackend({
+    db: openElectronDb(dbPath),
+    appVersion: app.getVersion(),
+    dbPath,
+  });
+
   createWindow();
 
   app.on('activate', () => {
