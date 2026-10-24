@@ -1,0 +1,8 @@
+{
+  "appId": "com.richfredericks.basshub",
+  "appName": "Bass Hub",
+  "webDir": "dist/ios",
+  "plugins": {
+    "CapacitorHttp": { "enabled": true }
+  }
+}

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Bass Hub</title>
+    <script>
+      // TEMPORARY: surface boot errors on screen for the spike harness.
+      function show(msg) {
+        var el = document.createElement('pre');
+        el.style.cssText = 'color:#f85149;font:12px ui-monospace,monospace;padding:24px;white-space:pre-wrap';
+        el.textContent = msg;
+        document.body.appendChild(el);
+      }
+      window.addEventListener('error', function (e) {
+        show('ERROR: ' + e.message + '\n' + (e.filename || '') + ':' + (e.lineno || '') + '\n' + (e.error && e.error.stack ? e.error.stack : ''));
+      });
+      window.addEventListener('unhandledrejection', function (e) {
+        show('REJECTION: ' + (e.reason && e.reason.message ? e.reason.message : e.reason));
+      });
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./main.jsx"></script>
+  </body>
+</html>

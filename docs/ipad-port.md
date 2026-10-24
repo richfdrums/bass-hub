@@ -1,7 +1,7 @@
 # iPad Port Plan
 
-**Status:** planning only. No code has been written. All product decisions are settled;
-feasibility spikes remain **on hold** (see [Deferred spikes](#deferred-spikes)).
+**Status:** planning + Phase 1 in progress on `feat/ipad-app-port`. Both feasibility spikes
+**passed** on an iPad simulator — see [Spike results](#spike-results).
 
 **Goal:** ship Bass Hub as an iPad app that shares the React UI and data layer with the
 existing macOS Electron app, following the pattern already proven in
@@ -349,8 +349,6 @@ its own branch/PR before `feat/ipad-capacitor`, not interleaved with the port.
 
 | Risk | Why it matters | Mitigation |
 |---|---|---|
-| **Maps key referrer restrictions** | Mac keys are usually locked to `file://`/localhost; the iPad origin is `capacitor://localhost`, so the Embed API iframes (`FishingTrips.jsx:30`, `TripForm.jsx:47`) may be rejected | Add a `capacitor://localhost` referrer rule (or an unrestricted key) in Cloud Console; verify before Phase 5 |
-| **Tackle Warehouse from WKWebView** | The scrape moves from Chromium to URLSession: different TLS fingerprint and UA handling | Manual fetch on device early in Phase 2; keep the desktop path as fallback |
 | **Cheerio in the web bundle** | Node-flavoured transitive deps can break a Vite build | Build `vite.ios.config.ts` with just the scraper before the rest |
 | **Remote images offline** | The catalog loses its images with no network — a regression from today's local copies | Accepted; placeholder is graceful. "Cache on view" only if it annoys you in practice |
 | **TW adds hotlink protection** | Images would break for every scraped item at once | Verified open today; placeholder + the existing "Open product page" link is the fallback |
@@ -371,15 +369,29 @@ exercise the affected view.
 
 ---
 
-## Deferred spikes
+## Spike results
 
-Both are on hold per your instruction:
+Both ran on an iPad (A16) simulator, iOS 27, Xcode 27, Capacitor 8.5.3, built with
+`npx cap add ios --packagemanager SPM`.
 
-1. Google Maps Embed API iframe inside WKWebView, with the existing key.
-2. A Tackle Warehouse product page fetched from WKWebView through CapacitorHttp.
+**1. Google Maps Embed API iframe inside WKWebView — PASS.** The map rendered fully
+(`Lake Okeechobee` place card, tiles, attribution) using the existing key from `.env`,
+with no referrer rejection. The Phase 5 layout work can rely on iframes.
 
-Not a spike: the image hotlinking question was answered directly (Phase 4) — TW's CDN
-serves to `capacitor://localhost` and `file://` referrers with no cookies.
+**2. Tackle Warehouse through CapacitorHttp — PASS.**
+
+```
+platform=ios keyLen=39
+tw-page  status=200 bytes=206243 main_image=true brand=true
+tw-image status=200 type=image/jpeg bytes=7125
+```
+
+So a plain `fetch` in the WKWebView gets the real product page (not a challenge page),
+and the selectors the scraper depends on (`img.main_image`, `itemprop="brand"`) are
+present. Remote image loading works too, confirming the Phase 4 approach end-to-end.
+
+Not yet proven: Cheerio bundling for the web target (Phase 2), and the exact header set
+from `main.js` (only `Accept` was sent here).
 
 ---
 
