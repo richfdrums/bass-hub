@@ -7,6 +7,7 @@
   "include": [
     "src/core/**/*.ts",
     "src/shared/**/*.ts",
+    "src/components/**/*.tsx",
     "src/ios/**/*.ts",
     "src/ios/**/*.tsx",
     "src/env.d.ts"
