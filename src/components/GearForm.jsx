@@ -9,7 +9,7 @@ const CATEGORIES = {
     TERMINAL: 'Terminal Tackle'
 };
 
-const LURE_TYPES = ['Worm', 'Frog', 'Creature', 'Stickbait', 'Soft Jerkbait', 'Hard Jerkbait', 'Crankbait', 'Topwater', 'Spinnerbait', 'Jig'];
+const LURE_TYPES = ['Worm', 'Frog', 'Creature', 'Stickbait', 'Soft Jerkbait', 'Hard Jerkbait', 'Glide Bait', 'Crankbait', 'Topwater', 'Buzzbait', 'Spinnerbait', 'Swimbait', 'Jig'];
 const LINE_TYPES = ['Monofilament', 'Flourocarbon', 'Braid', 'Copolymer'];
 const REEL_TYPES = ['Baitcast', 'Spinning'];
 const ROD_TYPES = ['Casting', 'Spinning'];
