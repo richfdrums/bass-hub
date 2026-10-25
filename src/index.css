@@ -212,7 +212,9 @@ nav {
 .theme-toggle {
   position: absolute;
   top: 10px;
-  right: 16px;
+  /* Lines up with the content's right edge: .scroll-area's 48px padding plus
+     its 8px scrollbar gutter (always reserved, see .scroll-area) */
+  right: 56px;
   z-index: 10000;
   display: flex;
   gap: 2px;
@@ -268,6 +270,9 @@ nav {
 .scroll-area {
   flex: 1;
   overflow-y: auto;
+  /* Reserve the scrollbar's width on every view, so content (and the theme
+     switch lined up with it) doesn't shift between short and long pages */
+  scrollbar-gutter: stable;
   padding: 40px 48px 48px;
 }
 
