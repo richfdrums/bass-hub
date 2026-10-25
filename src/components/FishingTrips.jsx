@@ -24,7 +24,7 @@ const TripDetail = ({ trip, onBack, onEdit, onDelete, apiKey }) => {
                 </header>
 
                 <div className="article-content">
-                    {trip.lat && trip.lng && (
+                    {(trip.map_query || (trip.lat && trip.lng)) && (
                         <div className="article-image" style={{ height: '400px', position: 'relative', background: '#111' }}>
                             {apiKey ? (
                                 <iframe

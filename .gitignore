@@ -99,3 +99,7 @@ ios/App/App/capacitor.config.json
 ios/App/App/config.xml
 **/xcuserdata/
 **/.build/
+
+# Local build/install helper scripts
+/mac-app-build
+/ipad-install
