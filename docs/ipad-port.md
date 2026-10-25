@@ -1,7 +1,17 @@
 # iPad Port Plan
 
-**Status:** planning + Phase 1 in progress on `feat/ipad-app-port`. Both feasibility spikes
-**passed** on an iPad simulator — see [Spike results](#spike-results).
+**Status: shipped in v1** on `feat/ipad-app-port`. Both feasibility spikes **passed** on an
+iPad simulator (see [Spike results](#spike-results)), and the app runs end to end there: the
+shared React UI, a native SQLite plugin, hotlinked product images, the icon rail layout, and
+manual snapshot exchange with the Mac.
+
+What is verified and what is not:
+
+| | |
+|---|---|
+| **Verified on the simulator** | schema + migrations on a fresh install, real data (15 gear / 3 trips / 7 links), all five views, Smart Extract and the title lookup through CapacitorHttp, hotlinked images (including a dead URL), snapshot export → share sheet, import picker, export → replace round trip with the JS connection intact, rolling backups pruning to five, first-run prompt, app icon |
+| **Not verified here** | the launch screen (SplashBoard refuses to generate snapshots for this bundle in the simulator, so it never renders), Maps embeds, keyboard behaviour, and anything that needs a physical iPad |
+| **Deferred to P2** | camera / photo-library image overrides, `FileStore` seam, an offline image cache, replacing the remaining `alert()` calls |
 
 **Goal:** ship Bass Hub as an iPad app that shares the React UI and data layer with the
 existing macOS Electron app, following the pattern already proven in
@@ -20,8 +30,8 @@ existing macOS Electron app, following the pattern already proven in
 | 4 | Signing | Free Personal Team, **7-day reinstalls** accepted |
 | 5 | TypeScript | Incremental — typed seams now, components later, see [TypeScript](#typescript) |
 | 6 | Bundle ID / name | `com.richfredericks.basshub` / "Bass Hub" |
-| 7 | Branching | `feat/ipad-capacitor` off `main`, Mac app kept green throughout |
-| 8 | Spikes | **On hold** |
+| 7 | Branching | `feat/ipad-app-port` off `main`, Mac app kept green throughout; one PR at the end |
+| 8 | Spikes | **Passed** (iPad A16 simulator, iOS 27, Xcode 27, Capacitor 8.5.3, SPM) |
 
 ---
 
@@ -77,19 +87,18 @@ on-device verification.
 ## Target architecture
 
 ```
-src/renderer.jsx + src/components/      ← unchanged UI, calls window.fishingApi only
-        │
-        ├─ desktop: src/preload.js ──IPC──▶ src/main.js (shell only: window, menus, dialogs)
-        │                                       │
-        └─ iPad:    src/ios/main.jsx ────────▶ src/core/backend.js
-                                                 ├─ src/core/db.js       (async CRUD, SQL only)
-                                                 ├─ src/core/extract.js  (fetch + cheerio)
-                                                 ├─ src/core/imageUrl.ts (remote URL helpers)
-                                                 └─ src/core/platform.js (the seams)
-                                                        │
-                              ┌─────────────────────────┴─────────────────────────┐
-                     src/main/platform/*                              src/ios/platform/*
-                     (better-sqlite3)                                 (SqlitePlugin)
+src/App.jsx + src/components/            <- unchanged UI, calls window.fishingApi only
+        |
+        |- desktop: src/preload.ts --IPC--> src/main.js (shell only: window, menus, dialogs)
+        |                                       |
+        +- iPad:    src/ios/main.tsx --------> src/core/backend.ts
+                                                 |- src/core/db.ts      (async CRUD, SQL only)
+                                                 |- src/core/extract.ts (fetch + cheerio)
+                                                 +- src/core/platform.ts (the seams)
+                                                        |
+                              +-------------------------+-------------------------+
+                     src/main/platform/                                 src/ios/platform/
+                     (better-sqlite3)                                   (SqlitePlugin)
 ```
 
 `src/core/` must not import `electron`, Node built-ins, or Capacitor. That rule is what
@@ -111,72 +120,87 @@ Deferred until needed:
 3. **`FileStore`** — only for P2 image overrides (`writeImage`, `convertFileSrc`) or the
    Phase 6 snapshot exchange. Removing the download pipeline means v1 needs neither.
 
-### File-level change map
+### File-level change map (as built)
 
 | File | Change |
 |---|---|
-| `src/core/platform.ts` | **new** — seams + platform registry |
-| `src/core/db.ts` | **new** — async port of `src/db.js` (schema, migrations, CRUD); adds the `image_url` column + `gearColumns` entry |
-| `src/core/backend.ts` | **new** — the 21-method API object (`download-image` is gone) |
-| `src/core/extract.ts` | **new** — `extract-gear-details` + `fetch-page-title`; returns the image URL, downloads nothing |
-| `src/core/imageUrl.ts` | **new** — URL normalization + `withWidth(url, nw)` for the TW resize endpoint |
-| `src/core/snapshot.ts` | **new** — snapshot validation (`integrity_check`, `user_version`) + rolling local backups |
-| `src/shared/api.ts` | **new** — the `window.fishingApi` type (single source of truth) |
-| `src/db.ts` → `src/main/platform/electronDb.ts` | better-sqlite3 adapter implementing `SqlDatabase` |
-| `src/main.js` | keep window/lifecycle; each handler becomes `backend.method(...)` |
-| `src/preload.js` | unchanged surface, typed against `shared/api.ts` |
-| `src/ios/index.html`, `src/ios/main.jsx` | **new** — Capacitor entry (`viewport-fit=cover`) |
-| `src/ios/platform/*.ts` | **new** — `iosDb.ts`, `plugins.ts` |
-| `vite.ios.config.ts` | **new** — root `src/ios`, `base: './'`, `target: 'safari16'`, outDir `dist/ios` |
+| `src/core/platform.ts` | **new** — seams (`SqlDatabase`, `close?()`) + platform registry |
+| `src/core/db.ts` | **new** — async port of `src/db.js` (schema, migrations, CRUD); adds `image_url` to the schema, the migration and `gearColumns`; guards `user_version` |
+| `src/core/backend.ts` | **new** — the `CoreApi` implementation (`download-image` is gone) |
+| `src/core/extract.ts` | **new** — `extractGearDetails` + `fetchPageTitle` on global `fetch`; returns the image URL, downloads nothing |
+| `src/shared/api.ts` | **new** — `CoreApi` / `DesktopApi` / `SnapshotApi`; single source of truth for `window.fishingApi` |
+| `src/shared/platform.ts` | **new** — `IS_IOS` from `<html data-platform>` |
+| `src/db.js` → `src/main/platform/electronDb.ts` | better-sqlite3 adapter behind the seam, rolling backups, `validateSnapshot` |
+| `src/main.js` | window/lifecycle only; each handler is one line into `backend` |
+| `src/preload.js` → `src/preload.ts` | same surface, typed against `shared/api.ts` |
+| `src/App.jsx` | **new** — the whole UI, lifted out of `renderer.jsx`; first-run prompt |
+| `src/renderer.jsx` | now a thin desktop entry |
+| `src/ios/index.html`, `src/ios/main.tsx` | **new** — Capacitor entry (`viewport-fit=cover`, error catcher, `data-platform="ios"`) |
+| `src/ios/platform/*.ts` | **new** — `plugins.ts` (Sqlite, Snapshot), `iosDb.ts`, `snapshots.ts` |
+| `vite.ios.config.mjs` | **new** — root `src/ios`, `base: './'`, `target: 'safari16'`, outDir `dist/ios`, `__MAPS_KEY__` / `__APP_VERSION__` |
 | `capacitor.config.json` | **new** — appId, `webDir: "dist/ios"`, `CapacitorHttp: { enabled: true }` |
-| `forge.config.js` | add `packagerConfig.ignore` for `dist/ios/**`, `ios/**`, `capacitor.config.json` |
-| `ios/App/App/SqlitePlugin.swift` | **new** — ported from Lakefront, plus `close()` / `reopen()` for snapshot import |
-| `ios/App/App/AppBridgeViewController.swift` | **new** — registers app-local plugins |
-| `src/components/GearImage.jsx` | **new** — override → remote → placeholder, `onError`, lazy, fixed aspect ratio |
-| `src/components/GearCatalog.jsx:42,384`, `GearCard.jsx:16`, `GearForm.jsx:92` | `file://` → `<GearImage>` |
-| `src/components/Sidebar.jsx` | collapse toggle, `aria-label`/`title` on nav items, collapsed state |
-| `src/index.css` | Phase 5 layout work (rail width, safe areas, touch targets) |
-| `src/renderer.jsx:99` | hide `.titlebar-drag-region` on iPad |
+| `forge.config.js` | no change needed — `dist/ios` and `ios/` never reach the Mac asar |
+| `ios/App/App/SqlitePlugin.swift` | **new** — ported from Lakefront, plus `closeDatabase()` / `reopenDatabase()` for snapshots |
+| `ios/App/App/SnapshotPlugin.swift` | **new** — export, pick + validate, replace |
+| `ios/App/App/DbPaths.swift` | **new** — DB path, rolling backups |
+| `ios/App/App/AppBridgeViewController.swift` | **new** — registers both app-local plugins |
+| `src/components/GearImage.tsx` | **new** — override → remote → nothing, `onError`, lazy, no referrer |
+| `src/components/GearCatalog.jsx`, `GearCard.jsx`, `GearForm.jsx` | `file://` → `<GearImage>` |
+| `src/components/Sidebar.jsx` | collapse toggle, icon rail, `aria-label`/`title` on nav items |
+| `src/components/Settings.jsx` | Snapshots card (export/import), confirm modal, last-import date |
+| `src/index.css` | appended "Collapsible sidebar" + `[data-platform="ios"]` sections |
+| `scripts/ios-assets.swift` | **new** — icon + launch image from `logo.png` (`npm run assets:ios`) |
 
 ---
 
 ## Phases
 
-### Phase 1 — Shared core
+### Phase 1 — Shared core ✅
 
-- [ ] `src/core/platform.ts` with the `SqlDatabase` seam + platform registry
-- [ ] `src/core/db.ts`: schema `CREATE TABLE IF NOT EXISTS` + the `ALTER TABLE` migrations
-      (currently `src/db.js:76–108`) run inside an async `init()`; add `image_url`
-- [ ] `src/main/platform/electronDb.ts` wraps `better-sqlite3`
-- [ ] `src/core/backend.ts` implements all 21 methods (`saveImage` stays desktop-only)
-- [ ] `PRAGMA user_version = 1` set after migrations; opening a newer version is refused
-- [ ] Rolling local backups: on launch, snapshot the DB into `backups/`, keep the last 5
-      (invisible; no UI)
-- [ ] `src/main.js` reduced to shell duties + one-line IPC handlers
-- [ ] `src/renderer.jsx` reuses its existing `isLoading` gate to wait for `init()`
+- [x] `src/core/platform.ts` with the `SqlDatabase` seam + platform registry
+- [x] `src/core/db.ts`: schema `CREATE TABLE IF NOT EXISTS` + the migrations from the old
+      `src/db.js:76–108` run inside an async `init()`; adds `image_url`
+- [x] `src/main/platform/electronDb.ts` wraps `better-sqlite3`
+- [x] `src/core/backend.ts` implements the whole `CoreApi` (`saveImage` stays desktop-only)
+- [x] `PRAGMA user_version = 1` set after migrations; a newer database is refused
+- [x] Rolling local backups: on launch, snapshot the DB into `backups/`, keep the last 5
+      (invisible; no UI) — `electronDb.ts` on the Mac, `DbPaths.swift` on the iPad
+- [x] `src/main.js` reduced to shell duties + one-line IPC handlers
+- [x] The UI moved to `src/App.jsx`; `src/renderer.jsx` is a thin desktop entry that reuses
+      the existing `isLoading` gate while the backend initialises
 
-**Risk:** an un-awaited call surfaces as `[object Promise]` in the UI. Mitigate with the
-TypeScript seams (below) and by clicking through all five views on desktop.
+**Deviation:** the old blind `ALTER TABLE ... ADD COLUMN` in try/catch became
+`ensureColumn()` (checks `PRAGMA table_info` first), so a partial migration cannot throw its
+way into a half-applied schema.
 
-### Phase 2 — Scraper + network in shared code
+**Risk (handled):** an un-awaited call would surface as `[object Promise]` in the UI. The
+TypeScript seams catch that at `npm run typecheck`, and all five views were clicked through.
 
-- [ ] `src/core/extract.ts`: plain `fetch`, same headers, Cheerio **browser** build
-- [ ] Port the brand list and the category cascade **literally** — it is the most brittle
-      code in the app and nothing about it should change in this pass
-- [ ] `fetch-page-title` moves alongside it
-- [ ] The scrape returns `extracted_image_url` and nothing else — no download step
-- [ ] Confirm Cheerio bundles for the web target (`cheerio/slim` or a Vite alias if its
-      transitive deps misbehave)
+### Phase 2 — Scraper + network in shared code ✅
 
-### Phase 3 — Capacitor scaffold
+- [x] `src/core/extract.ts`: plain `fetch`, same headers, Cheerio browser build
+- [x] The brand list and the category cascade ported **literally** — it is the most brittle
+      code in the app and nothing about it changed in this pass
+- [x] `fetch-page-title` moved alongside it
+- [x] The scrape returns `extracted_image_url` and nothing else — no download step
+- [x] Cheerio bundles for the web target without `cheerio/slim` or a Vite alias
+      (454 kB / 159 kB gzip, which is fine for a local bundle)
 
-- [ ] `@capacitor/core`, `@capacitor/ios`, `@capacitor/cli` (8.5.x). `@capacitor/filesystem`
-      and `@capacitor/share` are needed for Phase 6; `@capacitor/camera` only for P2
-- [ ] `capacitor.config.json`, `vite.ios.config.ts`, `src/ios/index.html`, `src/ios/main.jsx`
-- [ ] `npx cap add ios`; copy `SqlitePlugin.swift` + `AppBridgeViewController.swift`;
-      register both in `project.pbxproj` (Capacitor only auto-registers npm plugins)
-- [ ] `npm run build:ios` → `vite build -c vite.ios.config.ts && cap sync ios`
-- [ ] Forge ignore rules so `dist/ios` and `ios/` never land in the Mac asar
+### Phase 3 — Capacitor scaffold ✅
+
+- [x] `@capacitor/core`, `@capacitor/ios`, `@capacitor/cli` 8.5.3. `@capacitor/share` for
+      Phase 6; `@capacitor/camera` only for P2
+- [x] `capacitor.config.json`, `vite.ios.config.mjs`, `src/ios/index.html`, `src/ios/main.tsx`
+- [x] `npx cap add ios`; `SqlitePlugin.swift`, `SnapshotPlugin.swift`, `DbPaths.swift` and
+      `AppBridgeViewController.swift` registered by hand in `project.pbxproj` (Capacitor only
+      auto-registers npm plugins)
+- [x] `npm run build:ios` → `vite build -c vite.ios.config.mjs && cap sync ios`
+- [x] No Forge ignore rules needed: `dist/ios` and `ios/` are outside `out/` and do not land
+      in the Mac asar (checked with `asar list`)
+
+**Deviation:** `@capacitor/filesystem` 8.1.5 has no `pickFiles()` (that API does not exist in
+the released plugin), so the document picker is a small native plugin instead. The dependency
+was dropped again — the only filesystem work happens in Swift.
 
 ### Phase 4 — Remote images
 
@@ -194,20 +218,21 @@ TypeScript seams (below) and by clicking through all five views on desktop.
 | Bad path | `404 text/html` → `onError` fires cleanly |
 | `img.main_image` still matches | Yes, and its `src` is already absolute |
 
-- [ ] Add `gear.image_url TEXT`; **keep** `image_path` for user overrides. Add both to the
+- [x] Add `gear.image_url TEXT`; **keep** `image_path` for user overrides. Both are in the
       `gearColumns` whitelist (the documented footgun in `AGENTS.md`)
-- [ ] Resolution order, in one place: `image_path` (override) → `image_url` (remote) →
-      placeholder. Existing rows keep their downloaded files and still render on desktop
-      (the only place `file://` survives); the iPad only ever sees `image_url` or the
-      placeholder until P2
-- [ ] `GearImage.jsx`: inline SVG placeholder (theme-aware via `currentColor`), `onError` →
-      placeholder (and reset state when `src` changes, or a recycled `<img>` sticks),
-      `loading="lazy"`, fixed aspect-ratio box, `referrerPolicy="no-referrer"`
-- [ ] `withWidth(url, nw)` in `core/imageUrl.ts`: cards request `nw=455`, the detail and
-      lightbox views ~`nw=900`; leave non-TW URLs untouched
-- [ ] `processUrl` stores `extracted_image_url` into `image_url`; delete the `downloadImage`
-      call and the `download-image` handler (`main.js:197–224`)
-- [ ] Capability flag (`canPickImages`) so the upload zone doesn't render on iPad until P2
+- [x] Resolution order, in one place (`GearImage.tsx`): `image_path` (override) →
+      `image_url` (remote) → nothing. Existing rows keep their downloaded files and still
+      render on desktop (the only place `file://` survives); the iPad only ever sees
+      `image_url` until P2
+- [x] `GearImage.tsx`: `loading="lazy"`, `referrerPolicy="no-referrer"`, and `onError` drops
+      the image (tracking the failed `src`, so a different item in the same slot retries)
+- [x] `processUrl` stores `extracted_image_url` into `image_url`; the `downloadImage` call and
+      the `download-image` handler are gone
+- [ ] `withWidth(url, nw)` in `core/imageUrl.ts` — **not needed**: the TW scrape already
+      returns `...&nw=455`, which is the size the cards want
+- [ ] Inline SVG placeholder and a `canPickImages` capability flag — **deferred**. A missing
+      image renders nothing (no empty frame), and the iPad's `saveImage` returns `null`, so
+      the upload zone is inert rather than broken. Both belong with the P2 picker work
 
 **Tradeoff:** the catalog is no longer usable offline — images show placeholders instead.
 Accepted for now; revisit with a "cache on view" pass only if it bothers you in practice.
@@ -217,31 +242,31 @@ library) or photo picker writes a file and sets `image_path`, which wins over `i
 Needs `NSCameraUsageDescription` + `NSPhotoLibraryUsageDescription`, the `FileStore` seam,
 and `convertFileSrc` (unproven here, but out of the v1 critical path).
 
-### Phase 5 — iPad layout & touch
+### Phase 5 — iPad layout & touch ✅ (with deferrals)
 
-- [ ] **Collapsible sidebar → icon rail.** `Sidebar.jsx` gets a collapse toggle in
-      `.sidebar-header`; a `.sidebar.collapsed` class drives `width: 260px` → ~72pt
-      (`index.css:45`). Hide the `.label` span (it exists in the markup but has no CSS
-      rule today, so this is one line), center `.nav-icon`, and add `title` + `aria-label`
-      to each `.nav-item` because the labels disappear. Persist the choice in
-      `localStorage` (works in both shells) rather than the async `settings` table.
-- [ ] Auto-collapse below ~900pt via a media query, with a manual toggle overriding it
-- [ ] Verify `.nav-item` (12px/16px padding) still yields a ≥44pt touch target in the
-      rail, and that the footer Settings button matches
-- [ ] `.sidebar-header` is both the drag handle and the logo + "Bass Hub" wordmark
-      (`index.css:52`). On iPad it needs `env(safe-area-inset-top)` and the wordmark must
-      hide when collapsed; decide what the rail shows instead
-- [ ] Hide `.titlebar-drag-region` (`index.css:1374`) on iPad — it is 48px tall,
+- [x] **Collapsible sidebar → icon rail.** `Sidebar.jsx` has a collapse toggle in
+      `.sidebar-header`; `.sidebar.collapsed` drives `width: 260px` → 76px. Labels hide, the
+      rail centres the icons, and each `.nav-item` keeps `title` + `aria-label`. On the iPad
+      it starts collapsed and expands as an overlay with a scrim; the desktop starts expanded
+- [x] `.sidebar-header` (logo + wordmark) gets `env(safe-area-inset-top)`; the wordmark hides
+      when collapsed
+- [x] Hide `.titlebar-drag-region` (`index.css:1374`) on iPad — it is 48px tall,
       `z-index: 9999`, `pointer-events: auto`, and would swallow taps across the top edge
-- [ ] `viewport-fit=cover` + `env(safe-area-inset-*)` on the main scroll area; `100dvh`
-      instead of `100vh`; `overscroll-behavior: none`; disable double-tap zoom and
-      long-press callout
-- [ ] Form inputs need `font-size: 16px` minimum or iOS zooms on focus
-- [ ] Replace `alert()` / `confirm()` (11 call sites) with the existing `Modal` at least
-      for destructive actions
-- [ ] Touch equivalents for hover-only affordances
-- [ ] `UIRequiresFullScreen = true` for v1, which sidesteps split-view widths down to
-      ~320pt; revisit if multitasking is wanted
+- [x] `viewport-fit=cover` + `env(safe-area-inset-*)` on the scroll area, sidebar and modals;
+      `100dvh` instead of `100vh`; `overscroll-behavior: none`; no tap highlight
+- [x] Modals capped to `min(480px, 100vw - 48px)` (and 900px for `.large`), which otherwise
+      overflow an iPad in portrait
+- [ ] Auto-collapse below ~900pt via a media query — **not needed**: the default already
+      differs per platform, and a manual toggle covers the rest
+- [ ] Persisting the collapsed state in `localStorage` — **deferred**; the per-platform
+      default is the behaviour that was actually wanted
+- [ ] `font-size: 16px` on form inputs to stop iOS zoom-on-focus — **deferred**; the forms
+      already use larger sizes and no zoom was seen in the simulator
+- [ ] Replacing the remaining `alert()` / `confirm()` calls with `Modal` — **partially done**:
+      the destructive snapshot import has a real confirm modal, the rest still use `alert()`
+- [ ] `UIRequiresFullScreen = true` — **dropped on purpose**. The layout is a flex sidebar
+      plus a scrolling column, so split view works; forcing full screen would remove
+      multitasking for no gain. `TARGETED_DEVICE_FAMILY = 2` keeps it iPad-only
 
 ### Phase 6 — Data movement (manual snapshots)
 
@@ -261,20 +286,21 @@ it needs the paid account — wrong trade for one user and two devices.
 **Shape:** each app keeps its own DB in its own container. Moving data means copying a
 complete, closed file in or out — never opening one in place.
 
-- [ ] **iPad import:** document picker (`Filesystem.pickFiles()`, or a small
-      `UIDocumentPickerViewController` plugin if that's awkward) → copy to a temp file →
-      validate (`PRAGMA integrity_check` + `user_version`) → close the live handle →
-      replace → reopen → reload the webview
-- [ ] **iPad export:** copy the container DB to a temp file → Share sheet
+- [x] **iPad import:** document picker (`UIDocumentPickerViewController` in
+      `SnapshotPlugin.swift`, since `@capacitor/filesystem` has no picker) → copy to a temp
+      file → validate (`PRAGMA integrity_check` + `user_version` + row counts) → close the
+      live handle → replace → reopen → reload the webview
+- [x] **iPad export:** close, copy the container DB to a temp file, reopen → Share sheet
       (`@capacitor/share`) → iCloud Drive / AirDrop / Files
-- [ ] **Confirm before overwrite**, using the app's `Modal`, naming the incoming contents
-      ("214 gear items, 12 trips, 38 links") and what they replace
-- [ ] **First-run prompt** when the DB is empty: "Bring your data over from your Mac?"
-- [ ] **Settings → Data** card: "Export snapshot" / "Import snapshot" + last-import date.
+- [x] **Confirm before overwrite**, using the app's `Modal`, naming the incoming contents
+      ("3 gear items, 12 trips, 38 links") and what they replace
+- [x] **First-run prompt** when the DB is empty: "Bring your data over" → Settings, or start
+      fresh (recorded in `settings.first_run_dismissed`)
+- [x] **Settings → Snapshots** card: "Share Snapshot" / "Choose Snapshot" + last-import date.
       Deliberately the only data-movement UI in the app.
-- [ ] **Desktop:** keep both existing handlers so the iPad can push a snapshot back. Fix
-      the import to close the DB before copying (today it copies over an open handle and
-      relaunches)
+- [x] **Desktop:** both handlers kept, so the iPad can push a snapshot back. The restore now
+      validates the chosen file first and closes the DB before copying over it (it used to
+      copy under an open handle and relaunch)
 
 **Migration path:** Desktop Settings → Export → save into iCloud Drive → iPad Settings →
 Import snapshot → pick that file. To refresh the Mac later, reverse it: iPad → Export
@@ -292,24 +318,38 @@ Only worth building if manual sharing proves tedious in practice.
 a snapshot. Keeping them out of the synced path is what preserves the portable-DB property
 from Phase 4.
 
-### Phase 7 — Icon, signing, install
+### Phase 7 — Icon, signing, install ✅ (signing steps documented, not automated)
 
-- [ ] 1024² opaque PNG from `src/assets/logo.png` (the Mac icon is an `.icns` with
-      transparent corners, which iOS rejects); script for AppIcon + LaunchScreen
-- [ ] `UIDeviceFamily = [2]` (iPad only), min iOS 16, all four orientations,
-      light status bar content
-- [ ] Free Personal Team signing (`DEVELOPMENT_TEAM`) → 7-day installs; add the reinstall
-      steps to `README.md` (reuse Lakefront's wording)
-- [ ] First install from Xcode: `npx cap open ios`, pick the iPad, ⌘R
+- [x] 1024² opaque PNG from `src/assets/logo.png` (the Mac icon is an `.icns` with
+      transparent corners, which iOS rejects); `scripts/ios-assets.swift` draws the icon and
+      the launch image, run with `npm run assets:ios`
+- [x] `TARGETED_DEVICE_FAMILY = 2` (iPad only), min iOS 16, all four orientations,
+      `UIUserInterfaceStyle = Dark`, stale `armv7` capability removed
+- [x] `LaunchScreen.storyboard` keeps the logo centred (`scaleAspectFit`) on the app's
+      background colour instead of stretching the default splash
+- [ ] Free Personal Team signing (`DEVELOPMENT_TEAM`) is **not** checked in — it is tied to
+      a person's Apple ID. Steps are in `README.md`; reinstall every 7 days
+- [ ] First install from Xcode: `npx cap open ios`, pick the iPad, ⌘R — **your move**; the
+      simulator is as far as this branch was verified
 
-### Phase 8 — Verification
+**Caveat:** the simulator never renders the launch screen for this bundle (SplashBoard
+rejects snapshot generation for it, and the screen stays black even with a 3-second delay
+before the scene connects), so the launch image is verified only by inspecting the generated
+asset and the compiled storyboard. The icon *is* verified on the simulator home screen.
 
-- [ ] `src/ios/smokeTest.js` behind `VITE_SMOKE_TEST=1`, exercising every
-      `window.fishingApi` method, plus an export → validate → import round trip, and logging
-      `[smoke] PASS/FAIL`; read with `xcrun simctl launch --console-pty` (or
-      `xcrun devicectl device process launch --console` on device)
+### Phase 8 — Verification ⚠️ (simulator pass done, device pass pending)
+
+- [x] Simulator pass, using temporary probes instead of a `VITE_SMOKE_TEST` build: every
+      `window.fishingApi` method exercised, Smart Extract + title lookup through
+      CapacitorHttp, export → replace round trip with the JS connection intact, share sheet
+      and document picker screenshots, backups pruning to five, first-run prompt, dead image
+      URL, icon rail in both states
 - [ ] Real-device pass for what a simulator can't prove: Maps embeds, Tackle Warehouse
-      scraping, remote image loading + placeholders, keyboard behavior
+      scraping from the device network, remote image loading, keyboard behaviour, and the
+      launch screen
+
+> The probe code was removed before the PR — nothing behind `VITE_SMOKE_TEST` exists in the
+> tree. If the port is picked up again, a permanent smoke test is worth the setup.
 
 ---
 
