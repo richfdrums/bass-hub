@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en" data-platform="ios">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="dark" />
+    <title>Bass Hub</title>
+    <script>
+      // WKWebView has no visible console, so surface uncaught boot errors on
+      // screen instead of a blank page. Startup failures are also handled in
+      // main.tsx; this catches everything else.
+      (function () {
+        function show(prefix, detail) {
+          var el = document.createElement('pre');
+          el.style.cssText =
+            'color:#f85149;font:12px ui-monospace,monospace;padding:24px;white-space:pre-wrap';
+          el.textContent = prefix + '\n\n' + detail;
+          document.body.appendChild(el);
+        }
+        window.addEventListener('error', function (e) {
+          show('Uncaught error: ' + e.message, (e.error && e.error.stack) || e.filename + ':' + e.lineno);
+        });
+        window.addEventListener('unhandledrejection', function (e) {
+          var r = e.reason;
+          show('Unhandled rejection', (r && r.stack) || String(r));
+        });
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>

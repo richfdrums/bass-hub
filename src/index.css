@@ -355,6 +355,51 @@ h1 {
   color: var(--accent);
 }
 
+/* Image refresh (edit form): backfills image_url from the product page */
+.image-refresh {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: -6px 0 15px;
+}
+
+.btn-refresh-image {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-refresh-image:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.08);
+}
+
+.btn-refresh-image:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-refresh-image .btn-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.btn-refresh-image .spinner {
+  width: 12px;
+  height: 12px;
+}
+
 .preview-container {
   position: relative;
   width: 100%;
@@ -1863,3 +1908,171 @@ textarea,
 .wx-rain { stroke: #58a6ff; }
 .wx-snow { stroke: #e6edf3; stroke-width: 3; }
 .wx-bolt { stroke: #f2c94c; }
+/* ---------------------------------------------------------------------------
+   Collapsible sidebar
+   Shared by both shells. On the iPad it starts as an icon rail and expands as
+   an overlay (a tablet cannot spend 260px on navigation); on the desktop it
+   starts expanded, exactly as before.
+   --------------------------------------------------------------------------- */
+
+.sidebar {
+  flex-shrink: 0;
+  transition: width 0.18s ease;
+}
+
+.sidebar.collapsed {
+  width: 76px;
+}
+
+.sidebar.collapsed .sidebar-header {
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 8px;
+  margin-bottom: 12px;
+}
+
+.sidebar.collapsed nav {
+  padding: 0 10px;
+}
+
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 12px 8px;
+}
+
+.sidebar.collapsed .sidebar-footer {
+  padding: 16px 10px;
+}
+
+.sidebar-toggle {
+  margin-left: auto;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.sidebar-toggle:hover {
+  color: var(--text-main);
+  border-color: var(--accent);
+}
+
+.sidebar-toggle svg {
+  width: 16px;
+  height: 16px;
+}
+
+.sidebar.collapsed .sidebar-toggle {
+  margin-left: 0;
+}
+
+/* iOS (Capacitor) adjustments. Scoped by data-platform so the Mac is
+   untouched. env() insets come from viewport-fit=cover in src/ios/index.html. */
+
+[data-platform="ios"] body {
+  height: 100dvh;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Electron-only window drag strip: on the iPad it would swallow taps. */
+[data-platform="ios"] .titlebar-drag-region {
+  display: none;
+}
+
+[data-platform="ios"] .sidebar {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+[data-platform="ios"] .sidebar.expanded {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 40;
+  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.5);
+}
+
+[data-platform="ios"] .sidebar-header {
+  padding-top: calc(20px + env(safe-area-inset-top));
+}
+
+[data-platform="ios"] .sidebar.collapsed .sidebar-header {
+  padding-top: calc(16px + env(safe-area-inset-top));
+}
+
+.sidebar-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 35;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+[data-platform="ios"] .main-content {
+  padding-top: env(safe-area-inset-top);
+}
+
+[data-platform="ios"] .scroll-area {
+  padding: 24px;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Modals are sized for a desktop window; keep them inside an iPad screen. */
+[data-platform="ios"] .modal-content {
+  width: min(480px, calc(100vw - 48px));
+  max-height: calc(100dvh - 2 * env(safe-area-inset-top) - 48px);
+}
+
+[data-platform="ios"] .modal-content.large {
+  width: min(900px, calc(100vw - 48px));
+}
+
+/* Snapshot import confirmation (Settings) */
+.snapshot-summary {
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+
+.snapshot-summary strong {
+  color: var(--text-main);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.settings-hint {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  margin-top: 10px;
+}
+
+/* Gear image backfill outcome (Settings → Gear Images) */
+.backfill-result {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.backfill-failures {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}

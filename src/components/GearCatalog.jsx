@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
 import GearCard from './GearCard';
+import GearImage from './GearImage';
 import GearForm from './GearForm';
 
 const CATEGORIES = {
@@ -37,11 +38,7 @@ const GearDetail = ({ item, onBack, onEdit, onDelete }) => {
                 </header>
 
                 <div className="article-content">
-                    {item.image_path && (
-                        <figure className="article-image">
-                            <img src={`file://${item.image_path}`} alt={item.model} />
-                        </figure>
-                    )}
+                    <GearImage item={item} className="article-image" />
 
                     <section className="article-specs">
                         <h3>Specifications</h3>
@@ -130,6 +127,8 @@ const GearCatalog = ({ initialShowSmartAdd, onSmartAddHandled, initialUrl, initi
     const [dragActive, setDragActive] = useState(false);
     const [isExtracting, setIsExtracting] = useState(false);
     const [extractError, setExtractError] = useState(null);
+    const [isRefreshingImage, setIsRefreshingImage] = useState(false);
+    const [imageRefreshError, setImageRefreshError] = useState(null);
     const [lastExtractedUrl, setLastExtractedUrl] = useState('');
     const [lightboxImage, setLightboxImage] = useState(null);
     const [selectedItem, setSelectedItem] = useState(null);
@@ -209,6 +208,7 @@ const GearCatalog = ({ initialShowSmartAdd, onSmartAddHandled, initialUrl, initi
         setEditingId(null);
         setShowForm(false);
         setExtractError(null);
+        setImageRefreshError(null);
         setLastExtractedUrl('');
     };
 
@@ -216,6 +216,8 @@ const GearCatalog = ({ initialShowSmartAdd, onSmartAddHandled, initialUrl, initi
         setFormData(item);
         setEditingId(item.id);
         setSelectedItem(null);
+        setExtractError(null);
+        setImageRefreshError(null);
         setShowForm(true);
     };
 
@@ -237,11 +239,6 @@ const GearCatalog = ({ initialShowSmartAdd, onSmartAddHandled, initialUrl, initi
 
         if (result.success) {
             const extractedData = result.data;
-            let localImagePath = null;
-
-            if (extractedData.extracted_image_url) {
-                localImagePath = await window.fishingApi.downloadImage(extractedData.extracted_image_url);
-            }
 
             const currentWishlistStatus = formData.is_wishlist !== undefined ? formData.is_wishlist : (activeList === LIST_TYPES.WISHLIST ? 1 : 0);
             const useWishlist = targetListType ? (targetListType === 'Wishlist' ? 1 : 0) : currentWishlistStatus;
@@ -252,7 +249,10 @@ const GearCatalog = ({ initialShowSmartAdd, onSmartAddHandled, initialUrl, initi
 
             setFormData({
                 ...extractedData,
-                image_path: localImagePath || formData.image_path,
+                // Hotlinked, not copied: the URL is stored and rendered directly.
+                // A local image_path (user override) still wins if one is set.
+                image_url: extractedData.extracted_image_url || null,
+                image_path: formData.image_path,
                 is_wishlist: useWishlist,
                 url: urlToProcess
             });
@@ -264,6 +264,28 @@ const GearCatalog = ({ initialShowSmartAdd, onSmartAddHandled, initialUrl, initi
             setExtractError(result.error || 'Could not extract details from this URL.');
         }
         setIsExtracting(false);
+    };
+
+    /**
+     * Re-reads the product image for the item being edited. Only `image_url` is
+     * replaced: a local `image_path` is a deliberate user override and stays.
+     */
+    const refreshImage = async () => {
+        const url = (formData.url || '').trim();
+        if (!url) return;
+
+        setIsRefreshingImage(true);
+        setImageRefreshError(null);
+
+        const result = await window.fishingApi.refreshGearImage(url);
+
+        if (result.success) {
+            setFormData(prev => ({ ...prev, image_url: result.imageUrl }));
+        } else {
+            setImageRefreshError(result.error || 'Could not refresh the image.');
+        }
+
+        setIsRefreshingImage(false);
     };
 
     const isUrlPasted = formData.url && formData.url.startsWith('http') && !editingId && formData.url !== lastExtractedUrl;
@@ -353,6 +375,9 @@ const GearCatalog = ({ initialShowSmartAdd, onSmartAddHandled, initialUrl, initi
                     extractError={extractError}
                     isUrlPasted={isUrlPasted}
                     processUrl={processUrl}
+                    onRefreshImage={refreshImage}
+                    isRefreshingImage={isRefreshingImage}
+                    imageRefreshError={imageRefreshError}
                     onSubmit={handleSubmit}
                     onCancel={resetForm}
                     editingId={editingId}
@@ -381,7 +406,7 @@ const GearCatalog = ({ initialShowSmartAdd, onSmartAddHandled, initialUrl, initi
             {lightboxImage && (
                 <div className="lightbox-modal" onClick={() => setLightboxImage(null)}>
                     <div className="lightbox-content" onClick={e => e.stopPropagation()}>
-                        <img src={`file://${lightboxImage}`} alt="Full size" />
+                        <img src={lightboxImage} alt="Full size" />
                         <button className="lightbox-close" onClick={() => setLightboxImage(null)}>×</button>
                     </div>
                 </div>
