@@ -98,8 +98,13 @@ npm run build:ios        # vite build + cap sync
 npx cap open ios         # opens ios/App/App.xcodeproj in Xcode
 ```
 
-In Xcode, select the `App` target → *Signing & Capabilities* → choose your
-**Personal Team** (a free Apple ID works), pick your iPad, and press ⌘R.
+In Xcode, pick your iPad and press ⌘R. The project is already pinned to a
+**Personal Team** (`DEVELOPMENT_TEAM = X4NX2HG9CD` in `project.pbxproj`), so
+automatic signing works without touching *Signing & Capabilities*. Building with
+a different Apple ID only needs that one value changed.
+
+The first launch is refused until the developer profile is trusted on the iPad:
+**Settings → General → VPN & Device Management → Apple Development: … → Trust**.
 
 A free Personal Team signature expires after **7 days**; after that the app stops
 launching until you rebuild it from Xcode the same way. Nothing else is needed —
