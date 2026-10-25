@@ -14,8 +14,8 @@ const MoonIcon = (
 );
 
 /**
- * Icon-only Light/Dark switch pinned to the top-right corner of the content
- * area. App owns the theme and saves it to settings.
+ * Icon-only Light/Dark switch in the top-right corner of the scroll area; it
+ * scrolls away with the page. App owns the theme and saves it to settings.
  */
 const ThemeToggle = ({ theme, onChange }) => (
     <div className="theme-toggle" role="group" aria-label="Appearance">

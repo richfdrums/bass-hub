@@ -172,8 +172,8 @@ const App = () => {
       <div className="titlebar-drag-region"></div>
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       <main className="main-content">
-        <ThemeToggle theme={theme} onChange={changeTheme} />
         <div className="scroll-area">
+          <ThemeToggle theme={theme} onChange={changeTheme} />
           {renderContent()}
         </div>
       </main>

@@ -206,15 +206,15 @@ nav {
   color: var(--accent);
 }
 
-/* Icon-only Light/Dark switch, pinned to the top-right corner of the content
-   area in the band above each view's header. It sits over the Electron drag
-   strip (z-index 9999), so it must be above it and opt out of dragging. */
+/* Icon-only Light/Dark switch in the top-right corner, in the band above each
+   view's header. It lives inside .scroll-area, so it scrolls away with the
+   page. It sits over the Electron drag strip (z-index 9999), so it must be
+   above it and opt out of dragging. */
 .theme-toggle {
   position: absolute;
   top: 10px;
-  /* Lines up with the content's right edge: .scroll-area's 48px padding plus
-     its 8px scrollbar gutter (always reserved, see .scroll-area) */
-  right: 56px;
+  /* .scroll-area's right padding, so it lines up with the content edge */
+  right: 48px;
   z-index: 10000;
   display: flex;
   gap: 2px;
@@ -274,6 +274,8 @@ nav {
      switch lined up with it) doesn't shift between short and long pages */
   scrollbar-gutter: stable;
   padding: 40px 48px 48px;
+  /* Anchors the theme switch so it scrolls with the content */
+  position: relative;
 }
 
 h1 {
@@ -2492,9 +2494,10 @@ textarea,
   color: var(--text-dim);
 }
 
-/* iPad: clear the status bar and keep the switch a comfortable tap target */
+/* iPad: sit in the taller top band (the status bar is already cleared by
+   .main-content's padding) and keep the switch a comfortable tap target */
 [data-platform="ios"] .theme-toggle {
-  top: calc(env(safe-area-inset-top) + 6px);
+  top: 16px;
   right: 24px;
 }
 
