@@ -2061,3 +2061,18 @@ textarea,
   font-size: 0.8rem;
   margin-top: 10px;
 }
+
+/* Gear image backfill outcome (Settings → Gear Images) */
+.backfill-result {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.backfill-failures {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}

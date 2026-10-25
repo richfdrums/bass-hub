@@ -10,6 +10,11 @@ const Settings = () => {
     // iPad only: the snapshot chosen in the picker, awaiting confirmation.
     const [pendingSnapshot, setPendingSnapshot] = useState(null);
     const [lastImport, setLastImport] = useState('');
+    // Gear image backfill: the catalog, live progress, and the last outcome.
+    const [gear, setGear] = useState([]);
+    const [isBackfilling, setIsBackfilling] = useState(false);
+    const [backfillProgress, setBackfillProgress] = useState(null);
+    const [backfillResult, setBackfillResult] = useState(null);
 
     useEffect(() => {
         const fetchKey = async () => {
@@ -27,6 +32,60 @@ const Settings = () => {
         };
         fetchLastImport();
     }, []);
+
+    useEffect(() => {
+        const loadGear = async () => setGear(await window.fishingApi.getGear());
+        loadGear();
+    }, []);
+
+    // Only items that have a product URL and no image yet; anything else is
+    // either fine already or has no page to read.
+    const missingImages = gear.filter((g) => /^https?:\/\//i.test(g.url || '') && !g.image_url);
+    const withoutUrl = gear.filter((g) => !/^https?:\/\//i.test(g.url || '')).length;
+
+    /**
+     * Walks the catalog one item at a time and re-reads each missing product
+     * image. Sequential on purpose: these are someone else's web servers, and
+     * one request at a time keeps a 15-item run from looking like a scrape.
+     */
+    const refreshMissingImages = async () => {
+        const targets = gear.filter((g) => /^https?:\/\//i.test(g.url || '') && !g.image_url);
+        if (targets.length === 0 || isBackfilling) return;
+
+        setIsBackfilling(true);
+        setBackfillResult(null);
+        setBackfillProgress({ done: 0, total: targets.length });
+
+        let added = 0;
+        const failed = [];
+
+        for (let i = 0; i < targets.length; i += 1) {
+            const item = targets[i];
+            const result = await window.fishingApi.refreshGearImage(item.url);
+
+            if (result.success) {
+                // Partial update: only image_url is written, everything else stays.
+                await window.fishingApi.updateGear(item.id, { image_url: result.imageUrl });
+                added += 1;
+            } else {
+                failed.push({
+                    label: `${item.brand || ''} ${item.model || ''}`.trim() || `Item #${item.id}`,
+                    error: result.error,
+                });
+            }
+
+            setBackfillProgress({ done: i + 1, total: targets.length });
+
+            if (i < targets.length - 1) {
+                await new Promise((resolve) => setTimeout(resolve, 300));
+            }
+        }
+
+        setGear(await window.fishingApi.getGear());
+        setBackfillResult({ added, failed });
+        setBackfillProgress(null);
+        setIsBackfilling(false);
+    };
 
     const handleExport = async () => {
         setIsExporting(true);
@@ -246,6 +305,65 @@ const Settings = () => {
                             </div>
                         </div>
                     )}
+                </section>
+
+                <section className="settings-section">
+                    <div className="section-header">
+                        <div className="section-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <div className="section-info">
+                            <h2>Gear Images</h2>
+                            <p>Product photos are hotlinked from the page each item was added from — nothing is stored locally.</p>
+                        </div>
+                    </div>
+
+                    <div className="settings-actions">
+                        <div className="action-card full-width">
+                            <h3>Missing Images</h3>
+                            <p>
+                                {missingImages.length === 0
+                                    ? 'Every item with a product URL has an image.'
+                                    : `${missingImages.length} ${missingImages.length === 1 ? 'item has' : 'items have'} a product URL but no image yet. Re-reading fetches just the photo and leaves every other field alone.`}
+                                {withoutUrl > 0 &&
+                                    ` ${withoutUrl} ${withoutUrl === 1 ? 'item has' : 'items have'} no product URL and ${withoutUrl === 1 ? 'is' : 'are'} skipped.`}
+                            </p>
+                            <button
+                                className="btn-primary"
+                                onClick={refreshMissingImages}
+                                disabled={isBackfilling || missingImages.length === 0}
+                            >
+                                {isBackfilling ? (
+                                    <>
+                                        <span className="spinner" />
+                                        Refreshing {backfillProgress ? `${backfillProgress.done} of ${backfillProgress.total}` : '...'}
+                                    </>
+                                ) : missingImages.length === 0 ? (
+                                    'All images present'
+                                ) : (
+                                    `Refresh ${missingImages.length} missing ${missingImages.length === 1 ? 'image' : 'images'}`
+                                )}
+                            </button>
+                            {backfillResult && (
+                                <div className="backfill-result">
+                                    <p className="settings-hint">
+                                        Added {backfillResult.added} {backfillResult.added === 1 ? 'image' : 'images'}
+                                        {backfillResult.failed.length > 0 &&
+                                            `, ${backfillResult.failed.length} could not be read`}.
+                                    </p>
+                                    {backfillResult.failed.length > 0 && (
+                                        <ul className="backfill-failures">
+                                            {backfillResult.failed.map((f) => (
+                                                <li key={f.label}>{f.label} — {f.error}</li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </section>
 
                 <section className="settings-section info">

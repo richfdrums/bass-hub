@@ -33,7 +33,7 @@ Save useful fishing resources and website links
 ![links screenshot](doc/link-add.png)
 
 ### Settings
-Allows for configuration of Google Maps API key (for Trips pages) and local DB export and restore.
+Allows for configuration of Google Maps API key (for Trips pages), local DB export and restore, and a one-shot **Refresh missing images** run that backfills product photos for gear that has a URL but no picture.
 
 ![settings screenshot](doc/settings.png)
 
