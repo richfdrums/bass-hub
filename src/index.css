@@ -206,62 +206,53 @@ nav {
   color: var(--accent);
 }
 
-/* Light/Dark switch in the sidebar footer */
+/* Icon-only Light/Dark switch, pinned to the top-right corner of the content
+   area in the band above each view's header. It sits over the Electron drag
+   strip (z-index 9999), so it must be above it and opt out of dragging. */
 .theme-toggle {
+  position: absolute;
+  top: 10px;
+  right: 16px;
+  z-index: 10000;
   display: flex;
+  gap: 2px;
   padding: 3px;
-  background: var(--glass);
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
   border-radius: 999px;
-}
-
-:root[data-theme="light"] .theme-toggle {
-  background: #e4ddcf;
+  -webkit-app-region: no-drag;
 }
 
 .theme-toggle button {
-  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  min-height: 32px;
+  width: 30px;
+  height: 24px;
   border: 0;
   border-radius: 999px;
   background: transparent;
   color: var(--text-dim);
-  font-size: 0.75rem;
-  font-weight: 600;
   cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.theme-toggle button:hover {
+  color: var(--text-main);
 }
 
 .theme-toggle button.active {
-  background: var(--panel-bg);
-  color: var(--text-main);
-  font-weight: 700;
-  box-shadow: 0 1px 3px var(--shadow);
+  background: var(--panel-hover);
+  color: var(--accent);
+}
+
+:root[data-theme="light"] .theme-toggle button.active {
+  background: var(--sidebar-bg);
 }
 
 .theme-toggle svg {
   width: 14px;
   height: 14px;
-}
-
-/* Icon rail: a single button that flips the theme */
-.theme-toggle-compact {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 40px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: transparent;
-  color: var(--text-dim);
-  cursor: pointer;
-}
-
-.theme-toggle-compact svg {
-  width: 16px;
-  height: 16px;
 }
 
 /* Main Content */
@@ -2494,4 +2485,21 @@ textarea,
   padding: 48px 0;
   text-align: center;
   color: var(--text-dim);
+}
+
+/* iPad: clear the status bar and keep the switch a comfortable tap target */
+[data-platform="ios"] .theme-toggle {
+  top: calc(env(safe-area-inset-top) + 6px);
+  right: 24px;
+}
+
+[data-platform="ios"] .theme-toggle button {
+  width: 38px;
+  height: 30px;
+}
+
+/* Room above each view's header for the theme switch (the iPad's top padding
+   is otherwise only 24px) */
+[data-platform="ios"] .scroll-area {
+  padding-top: 64px;
 }

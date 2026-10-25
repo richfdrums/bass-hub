@@ -57,6 +57,6 @@ On iPad there is no IPC: add the method to `backend` (shared) or to `src/ios/pla
 
 ## Conventions
 
-- Styling is plain CSS in `src/index.css`. Colors are theme tokens on `:root` (dark, the default) and `:root[data-theme="light"]`; `App` sets `data-theme` on `<html>` from `settings.theme`, toggled in the sidebar. Use the tokens, never raw colors, so both themes work. Type is Manrope with IBM Plex Mono for readouts, bundled via `@fontsource` (no network). Some components use inline styles. New iPad rules go in the appended `[data-platform="ios"]` block, not inline.
+- Styling is plain CSS in `src/index.css`. Colors are theme tokens on `:root` (dark, the default) and `:root[data-theme="light"]`; `App` sets `data-theme` on `<html>` from `settings.theme`, toggled by `ThemeToggle` (icon-only, pinned top-right of the content area). Use the tokens, never raw colors, so both themes work. Type is Manrope with IBM Plex Mono for readouts, bundled via `@fontsource` (no network). Some components use inline styles. New iPad rules go in the appended `[data-platform="ios"]` block, not inline.
 - The window uses `titleBarStyle: 'hiddenInset'`; the `.titlebar-drag-region` element in `App` provides the drag area (hidden on iPad, where it would swallow taps).
 - TypeScript is incremental: `src/core/`, `src/shared/`, `src/ios/`, `src/main/`, `src/preload.ts` and `GearImage.tsx` are typed; the rest of the components are still `.jsx`. Add types at the seams you touch rather than converting files wholesale.

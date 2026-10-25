@@ -15,6 +15,7 @@ import FishingTrips from "./components/FishingTrips.jsx";
 import QuickLinks from "./components/QuickLinks.jsx";
 import Settings from "./components/Settings.jsx";
 import Modal from "./components/Modal.jsx";
+import ThemeToggle from "./components/ThemeToggle.jsx";
 import { IS_IOS } from "./shared/platform";
 
 const THEME_SETTING = "theme";
@@ -169,8 +170,9 @@ const App = () => {
   const layout = (
     <div className="layout-container">
       <div className="titlebar-drag-region"></div>
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} onThemeChange={changeTheme} />
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       <main className="main-content">
+        <ThemeToggle theme={theme} onChange={changeTheme} />
         <div className="scroll-area">
           {renderContent()}
         </div>
