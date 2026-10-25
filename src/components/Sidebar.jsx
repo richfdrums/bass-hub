@@ -49,12 +49,25 @@ const SettingsIcon = (
     </svg>
 );
 
+const SunIcon = (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+        <circle cx="12" cy="12" r="4" />
+        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+    </svg>
+);
+
+const MoonIcon = (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
+    </svg>
+);
+
 /**
  * Collapsible sidebar. On the iPad it starts as an icon rail and expands over
  * the content (the tablet has no room to spend 260px on navigation); on the
  * desktop it starts expanded, as it always was.
  */
-const Sidebar = ({ activeTab, setActiveTab }) => {
+const Sidebar = ({ activeTab, setActiveTab, theme, onThemeChange }) => {
     const [collapsed, setCollapsed] = useState(IS_IOS);
 
     const select = (id) => {
@@ -98,6 +111,33 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
                     ))}
                 </nav>
                 <div className="sidebar-footer">
+                    {collapsed ? (
+                        <button
+                            className="theme-toggle-compact"
+                            onClick={() => onThemeChange(theme === 'light' ? 'dark' : 'light')}
+                            aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+                            title={theme === 'light' ? 'Dark mode' : 'Light mode'}
+                        >
+                            {theme === 'light' ? MoonIcon : SunIcon}
+                        </button>
+                    ) : (
+                        <div className="theme-toggle" role="group" aria-label="Appearance">
+                            <button
+                                className={theme === 'light' ? 'active' : ''}
+                                aria-pressed={theme === 'light'}
+                                onClick={() => onThemeChange('light')}
+                            >
+                                {SunIcon}Light
+                            </button>
+                            <button
+                                className={theme !== 'light' ? 'active' : ''}
+                                aria-pressed={theme !== 'light'}
+                                onClick={() => onThemeChange('dark')}
+                            >
+                                {MoonIcon}Dark
+                            </button>
+                        </div>
+                    )}
                     <button
                         className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
                         onClick={() => select('settings')}

@@ -42,7 +42,7 @@ const TripForm = ({
                         />
                     </div>
 
-                    <div className="map-container" style={{ height: '250px', width: '100%', borderRadius: '8px', overflow: 'hidden', marginTop: '10px', border: '1px solid var(--border)', background: '#111' }}>
+                    <div className="map-container" style={{ height: '250px', width: '100%', borderRadius: '8px', overflow: 'hidden', marginTop: '10px', border: '1px solid var(--border)', background: 'var(--panel-sunken)' }}>
                         {mapsApiKey && newTrip.map_query ? (
                             <iframe
                                 width="100%"
@@ -130,7 +130,7 @@ const TripForm = ({
                         </div>
                         <div className="links-list" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                             {newTrip.links && newTrip.links.map((link, idx) => (
-                                <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.2)', padding: '6px 10px', borderRadius: '4px', fontSize: '0.85rem' }}>
+                                <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--panel-sunken)', padding: '6px 10px', borderRadius: '4px', fontSize: '0.85rem' }}>
                                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '300px' }}>{link}</span>
                                     <button type="button" onClick={() => removeLink(idx)} style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: '1.2rem', lineHeight: '1' }}>&times;</button>
                                 </div>

@@ -49,12 +49,14 @@ On iPad there is no IPC: add the method to `backend` (shared) or to `src/ios/pla
 
 **iPad specifics**: the entry point is `src/ios/main.tsx` (opens the DB, installs the API, renders `App`). iOS-only CSS is scoped by `<html data-platform="ios">`, iOS-only JS by `IS_IOS` from `src/shared/platform.ts`. The sidebar starts as an icon rail and expands as an overlay. Swift plugins live in `ios/App/App/` and must be registered in `AppBridgeViewController.swift` and added to `project.pbxproj` by ID (Capacitor only auto-registers npm plugins). Data moves by snapshot exchange only — see `docs/ipad-port.md`.
 
-**Tides**: `TideWidget.jsx` calls the NOAA CO-OPS API directly from the renderer for a hardcoded station (8635299).
+**Tides**: `TideWidget.jsx` calls the NOAA CO-OPS API directly from the renderer for a hardcoded station (8635299). It is a subordinate station: NOAA only serves high/low predictions for it, so the tide curve is interpolated between extremes (half cosine), not fetched.
+
+**Conditions strip**: `ConditionsStrip.jsx` (top of the Dashboard) shows current air, wind, pressure trend, next tide and sunset. It reuses the weather widget's location (reported up through `Dashboard`) and helpers exported from `WeatherWidget.jsx`/`TideWidget.jsx`.
 
 **Weather**: `WeatherWidget.jsx` calls Open-Meteo directly from the renderer; locations are hardcoded in `LOCATIONS` and the selection persists in `settings.weather_location`.
 
 ## Conventions
 
-- Styling is plain CSS in `src/index.css` (CSS variables for the dark theme); keep the dark/premium look. Some components use inline styles. New iPad rules go in the appended `[data-platform="ios"]` block, not inline.
+- Styling is plain CSS in `src/index.css`. Colors are theme tokens on `:root` (dark, the default) and `:root[data-theme="light"]`; `App` sets `data-theme` on `<html>` from `settings.theme`, toggled in the sidebar. Use the tokens, never raw colors, so both themes work. Type is Manrope with IBM Plex Mono for readouts, bundled via `@fontsource` (no network). Some components use inline styles. New iPad rules go in the appended `[data-platform="ios"]` block, not inline.
 - The window uses `titleBarStyle: 'hiddenInset'`; the `.titlebar-drag-region` element in `App` provides the drag area (hidden on iPad, where it would swallow taps).
 - TypeScript is incremental: `src/core/`, `src/shared/`, `src/ios/`, `src/main/`, `src/preload.ts` and `GearImage.tsx` are typed; the rest of the components are still `.jsx`. Add types at the seams you touch rather than converting files wholesale.

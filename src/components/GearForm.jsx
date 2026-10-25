@@ -21,6 +21,7 @@ const GearForm = ({
     formData,
     setFormData,
     activeCategory,
+    onCategoryChange,
     dragActive,
     handleDrag,
     handleDrop,
@@ -273,10 +274,22 @@ const GearForm = ({
             break;
     }
 
+    // New items pick their category here (the catalog may be showing "All").
+    // An existing item keeps its category: its other columns belong to it.
+    const categoryPicker = !editingId && onCategoryChange && (
+        <div className="list-toggle-group" style={{ marginTop: 0 }}>
+            <label htmlFor="gear-category">Category</label>
+            <select id="gear-category" style={{ width: '100%' }} value={activeCategory} onChange={e => onCategoryChange(e.target.value)}>
+                {Object.values(CATEGORIES).map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+        </div>
+    );
+
     return (
         <form onSubmit={onSubmit}>
             {imageUpload}
             {imageRefresh}
+            {categoryPicker}
             {categoryFields}
             {urlField}
             <div className="form-actions">

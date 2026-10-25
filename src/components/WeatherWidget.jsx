@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
-const LOCATIONS = {
+export const LOCATIONS = {
     'bowling-green': { name: 'Bowling Green, VA', lat: 38.0496, lon: -77.3466 },
     'annandale': { name: 'Annandale, VA', lat: 38.8304, lon: -77.1964 }
 };
-const DEFAULT_LOCATION = 'bowling-green';
+export const DEFAULT_LOCATION = 'bowling-green';
 const SETTING_KEY = 'weather_location';
 
 // WMO weather codes (Open-Meteo) -> icon type + short description
@@ -95,7 +95,7 @@ const WeatherIcon = ({ type, isDay = true, size = 22 }) => {
 };
 
 const COMPASS = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
-const toCompass = (deg) => (deg == null ? '' : COMPASS[Math.round(deg / 22.5) % 16]);
+export const toCompass = (deg) => (deg == null ? '' : COMPASS[Math.round(deg / 22.5) % 16]);
 
 // Open-Meteo returns local times as "YYYY-MM-DDTHH:MM"; parse without UTC shifting
 const parseLocalDate = (dateStr) => {
@@ -108,7 +108,7 @@ const addDays = (dateStr, n) => {
     const pad = (v) => String(v).padStart(2, '0');
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 };
-const formatClock = (isoStr) => {
+export const formatClock = (isoStr) => {
     if (!isoStr) return '—';
     const [datePart, timePart] = isoStr.split('T');
     const [h, min] = timePart.split(':').map(Number);
@@ -117,7 +117,7 @@ const formatClock = (isoStr) => {
     return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 };
 
-const HPA_TO_INHG = 0.02953;
+export const HPA_TO_INHG = 0.02953;
 
 // Build per-day rows, deriving day (6a–6p) and night (6p–6a) halves from hourly data
 const buildForecast = (data) => {
@@ -192,7 +192,7 @@ const buildForecast = (data) => {
 const fmtTemp = (v) => (v == null ? '—' : `${Math.round(v)}°`);
 const fmtPct = (v) => (v == null ? '—' : `${Math.round(v)}%`);
 
-const WeatherWidget = () => {
+const WeatherWidget = ({ onLocationChange }) => {
     const [locationKey, setLocationKey] = useState(null);
     const [forecast, setForecast] = useState([]);
     const [expandedDate, setExpandedDate] = useState(null);
@@ -247,7 +247,10 @@ const WeatherWidget = () => {
     };
 
     useEffect(() => {
-        if (locationKey) fetchWeather(locationKey);
+        if (!locationKey) return;
+        fetchWeather(locationKey);
+        // The Dashboard's conditions strip follows the same location
+        if (onLocationChange) onLocationChange(locationKey);
     }, [locationKey]);
 
     const handleLocationChange = (e) => {

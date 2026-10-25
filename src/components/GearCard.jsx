@@ -33,10 +33,10 @@ const GearCard = ({ item, onImageClick, onTitleClick, onEdit, onDelete }) => {
                         <p><span>{item.type}</span> <span>{item.size}</span> <span>{item.gear_ratio}</span></p>
                     )}
                     {item.category === CATEGORIES.LURES && (
-                        <p><span>{item.lure_type}</span> <span>{item.length}</span> <span>{item.weight}oz</span> <span>{item.color}</span></p>
+                        <p><span>{item.lure_type}</span> <span>{item.length}</span> <span>{item.weight ? `${item.weight}oz` : ''}</span> <span>{item.color}</span></p>
                     )}
                     {item.category === CATEGORIES.LINE && (
-                        <p><span>{item.line_type}</span> <span>{item.test}lb</span> <span>{item.color}</span></p>
+                        <p><span>{item.line_type}</span> <span>{item.test ? `${item.test}lb` : ''}</span> <span>{item.color}</span></p>
                     )}
                     {item.category === CATEGORIES.TERMINAL && (
                         <p>
