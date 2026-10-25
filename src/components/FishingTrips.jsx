@@ -18,14 +18,14 @@ const TripDetail = ({ trip, onBack, onEdit, onDelete, apiKey }) => {
                     <div className="article-meta">
                         <span className="brand-pill">{trip.start_date}</span>
                         {trip.end_date && <span className="brand-pill">to {trip.end_date}</span>}
-                        {trip.total_cost > 0 && <span className="category-pill" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', borderColor: 'rgba(16, 185, 129, 0.2)' }}>${trip.total_cost.toFixed(2)}</span>}
+                        {trip.total_cost > 0 && <span className="category-pill" style={{ background: 'rgba(var(--accent-rgb), 0.12)', color: 'var(--accent)', borderColor: 'rgba(var(--accent-rgb), 0.3)' }}>${trip.total_cost.toFixed(2)}</span>}
                     </div>
                     <h1 className="article-title">{trip.location}</h1>
                 </header>
 
                 <div className="article-content">
                     {(trip.map_query || (trip.lat && trip.lng)) && (
-                        <div className="article-image" style={{ height: '400px', position: 'relative', background: '#111' }}>
+                        <div className="article-image" style={{ height: '400px', position: 'relative', background: 'var(--panel-sunken)' }}>
                             {apiKey ? (
                                 <iframe
                                     width="100%"
@@ -39,7 +39,7 @@ const TripDetail = ({ trip, onBack, onEdit, onDelete, apiKey }) => {
                                         : `https://www.google.com/maps/embed/v1/view?key=${apiKey}&center=${trip.lat},${trip.lng}&zoom=14`}
                                 ></iframe>
                             ) : (
-                                <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px', textAlign: 'center', color: 'var(--text-dim)', background: 'rgba(255,255,255,0.02)' }}>
+                                <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px', textAlign: 'center', color: 'var(--text-dim)', background: 'var(--panel-sunken)' }}>
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" style={{ width: '64px', height: '64px', marginBottom: '15px', opacity: 0.3 }}>
                                         <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                         <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />

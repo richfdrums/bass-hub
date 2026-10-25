@@ -1,169 +1,175 @@
 # Bass Hub
 
-A comprehensive fishing gear and trip management application built with Electron and React.
+A local-first companion app for bass anglers: keep your tackle inventory and
+wishlist, plan and log trips, save the links you keep going back to, and check
+conditions on the water before you leave. It runs on macOS (Electron) and as a
+native iPad app (Capacitor) from one shared React codebase. Your data stays on
+your device in SQLite.
 
-Entirely vibe coded using Google's Antigravity IDE and its built-in agentic coding manager.
+<p>
+  <img src="doc/dashboard-dark.png" alt="Bass Hub dashboard in the dark theme" width="49%">
+  <img src="doc/dashboard-light.png" alt="Bass Hub dashboard in the light theme" width="49%">
+</p>
 
 ## Features
 
 ### Dashboard
-Application entry point.  Displays simple widgets for gear catalog, trips, links, and an interactive tides module for Port Royal on the Rappahannock River.
 
-![dashboard screenshot](doc/dashboard.png)
+Today's conditions at a glance. The strip across the top shows air temperature,
+wind and gusts, barometric pressure with its trend, the next tide and sunset.
+Below it: what you own, how many days until your next trip, your saved links, a
+10-day forecast you can expand day by day (Open-Meteo), and the day's tide
+curve for Port Royal on the Rappahannock (NOAA).
 
 ### Gear Catalog
-Manage your fishing rods, reels, lures, line, and terminal tackle.  Differentiates between owned gear and like-to-have (wishlist).  Features "smart add" functionality in which metadata information can be ingested from a provided product page URL (e.g., on Tackle Warehouse or BPS).  Existing items can re-read just the product image from their saved URL with **Refresh image from product URL** on the edit form.
 
-![gear catalog screenshot](doc/gear-catalog.png)
-![gear catalog screenshot](doc/gear-smart-add-1.png)
-![gear catalog screenshot](doc/gear-smart-add-2.png)
+Rods, reels, lures, line and terminal tackle, split into what you own and what
+you want. Browse everything at once or filter by category, and search by brand
+or model.
 
-### Trip Planning
-Log and plan fishing trips with location mapping
+**Smart Add** fills in a new item from a product page: paste a URL from Tackle
+Warehouse, Bass Pro Shops and similar sites, and Bass Hub reads the brand, model,
+specs, description and photo for you. Items can re-fetch their product photo
+later from the edit form.
 
-![trips screenshot](doc/trips.png)
-![trips screenshot](doc/trip-detail.png)
-![trips screenshot](doc/trip-edit.png)
-![trips screenshot](doc/trip-add.png)
+![Gear Catalog](doc/gear-catalog.png)
+![Adding gear with Smart Add](doc/gear-add.png)
+
+### Trips
+
+Plan upcoming trips and keep notes on past ones: dates, location, costs, links
+and a journal. Each trip shows its location on a Google Map.
+
+![Trips](doc/trips.png)
+![Trip detail with map](doc/trip-detail.png)
 
 ### Links
-Save useful fishing resources and website links
 
-![links screenshot](doc/links.png)
-![links screenshot](doc/link-add.png)
+Group the sites you use (retailers, how-to videos, lodges) so they're one click
+away.
+
+![Links](doc/links.png)
 
 ### Settings
-Allows for configuration of Google Maps API key (for Trips pages), local DB export and restore, and a one-shot **Refresh missing images** run that backfills product photos for gear that has a URL but no picture.
 
-![settings screenshot](doc/settings.png)
+Set your Google Maps API key, back up or restore the whole database, and fill
+in missing product photos for gear that has a product URL.
 
+![Settings](doc/settings.png)
 
-## Setup
+### Light and dark themes
 
-### Prerequisites
+Switch between the warm charcoal-and-brass dark theme and the ivory light theme
+with the sun/moon toggle in the top-right corner. Your choice is remembered.
 
-- Node.js (v16 or higher)
-- npm
+## Getting started (macOS)
 
-### Installation
+**Requirements:** Node.js 18 or later and npm.
 
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Create a `.env` file in the root directory (use `.env.example` as a template):
-   ```bash
-   cp .env.example .env
-   ```
-
-4. Add your Google Maps API key to the `.env` file:
-   ```
-   GOOGLE_MAPS_API_KEY=your_api_key_here
-   ```
-
-### Development
-
-Start the development server:
 ```bash
+git clone https://github.com/richfdrums/bass-hub.git
+cd bass-hub
+npm install
+cp .env.example .env   # then add your Google Maps key (optional)
 npm start
 ```
 
-### Building
+`npm start` runs the app in development with hot reload. Trips show maps only
+when a Google Maps key is set, either as `GOOGLE_MAPS_API_KEY` in `.env` or
+under **Settings → Integrations**. The key needs the **Maps Embed API**
+enabled. Everything else works without one.
 
-Package the application:
-```bash
-npm run package
-```
+To build the app:
 
-Create distributable installers:
 ```bash
-npm run make
+npm run package   # Bass Hub.app in out/
+npm run make      # distributable zip
 ```
 
 ## iPad app
 
-The same UI also runs as a native iPad app (Capacitor + a small Swift SQLite
-plugin). The React components, the SQLite schema, and the scraper are shared with
-the Mac build — only the shell differs.
+The same interface runs natively on iPad, sharing the database code, the
+scraper and every screen with the Mac app.
 
-![iPad dashboard screenshot](doc/ipad-dashboard.png)
+<p>
+  <img src="doc/ipad-dashboard-dark.png" alt="Bass Hub on iPad, dark theme" width="49%">
+  <img src="doc/ipad-dashboard-light.png" alt="Bass Hub on iPad, light theme" width="49%">
+</p>
 
-### Running it
+### Installing on your iPad
+
+Requires a Mac with Xcode.
 
 ```bash
 npm install
-npm run build:ios        # vite build + cap sync
-npx cap open ios         # opens ios/App/App.xcodeproj in Xcode
+npm run build:ios   # builds the web bundle and syncs it into the Xcode project
+npx cap open ios    # opens the project in Xcode
 ```
 
-In Xcode, pick your iPad and press ⌘R. The project is already pinned to a
-**Personal Team** (`DEVELOPMENT_TEAM = X4NX2HG9CD` in `project.pbxproj`), so
-automatic signing works without touching *Signing & Capabilities*. Building with
-a different Apple ID only needs that one value changed.
+1. Connect the iPad, unlock it and tap **Trust** if asked.
+2. In Xcode, choose the iPad as the run destination and press **⌘R**. The
+   project uses automatic signing; to sign with your own Apple ID, change
+   `DEVELOPMENT_TEAM` in `ios/App/App.xcodeproj/project.pbxproj` (or pick your
+   team under *Signing & Capabilities*).
+3. First run only, on the iPad:
+   - turn on **Settings → Privacy & Security → Developer Mode** if iPadOS asks,
+     and let it restart;
+   - trust your profile under **Settings → General → VPN & Device Management**.
 
-The first launch is refused until the developer profile is trusted on the iPad:
-**Settings → General → VPN & Device Management → Apple Development: … → Trust**.
-
-A free Personal Team signature expires after **7 days**; after that the app stops
-launching until you rebuild it from Xcode the same way. Nothing else is needed —
-the database lives in the app container, so a rebuild keeps your data.
+With a free Apple developer account the app stops opening after **7 days**.
+Plug in and press ⌘R again to renew it; your data is kept.
 
 `npm run assets:ios` regenerates the app icon and launch image from
 `src/assets/logo.png`.
 
-### Moving data between the Mac and the iPad
+### Moving data between Mac and iPad
 
-There is no sync. Each device keeps its own database, and data travels as a whole
-file that you copy yourself:
+There's no sync: each device has its own database, and you move it as a single
+file.
 
-1. On the Mac: **Settings → Database Management → Export .db File**, save it
-   somewhere both devices can see (iCloud Drive, AirDrop).
-2. On the iPad: **Settings → Snapshots → Choose Snapshot**, pick that file, and
-   confirm. This **replaces** everything on the iPad; it does not merge.
-3. To go back the other way: **Share Snapshot** on the iPad, then
-   **Restore from File** on the Mac.
+1. **Mac → iPad:** on the Mac, **Settings → Export .db File** and save it
+   somewhere the iPad can reach (iCloud Drive, AirDrop). On the iPad,
+   **Settings → Snapshots → Choose Snapshot** and confirm.
+2. **iPad → Mac:** **Share Snapshot** on the iPad, then **Restore from File** on
+   the Mac.
 
-The iPad is the authoritative copy by convention. Both platforms also keep the
-last five invisible backups in `Application Support/backups` next to the database.
+Importing **replaces** everything on the receiving device; it doesn't merge.
+Both apps keep their last five automatic backups next to the database.
 
-The plan, decisions and verification notes for the port are in
+The design notes and decisions behind the iPad port are in
 [`docs/ipad-port.md`](docs/ipad-port.md).
 
-## Environment Variables
+## How it's built
 
-- `GOOGLE_MAPS_API_KEY`: Required for trip location mapping features
-
-## Project Structure
+- **React** UI shared by both apps, styled with plain CSS and theme tokens
+  (`src/index.css`); Manrope and IBM Plex Mono are bundled, so no fonts load
+  from the network.
+- **SQLite** behind one platform-neutral core (`src/core/`): `better-sqlite3`
+  on the Mac, a small Swift plugin on the iPad.
+- **Electron Forge + Vite** for the Mac app; **Capacitor** for the iPad.
+- Weather from **Open-Meteo**, tides from **NOAA CO-OPS**, maps from the
+  **Google Maps Embed API**.
 
 ```
 bass-hub/
 ├── src/
-│   ├── components/     # React components (shared by both apps)
-│   ├── assets/         # Images and static files
-│   ├── core/           # Platform-agnostic database + scraper (shared)
-│   ├── shared/         # Types for window.fishingApi, platform detection
-│   ├── main/           # Electron-only: better-sqlite3 adapter
-│   ├── ios/            # iPad entry point + native plugin bindings
-│   ├── App.jsx         # The whole UI
-│   ├── main.js         # Electron main process
-│   ├── preload.ts      # Preload script (desktop Api)
-│   ├── renderer.jsx    # Desktop React entry point
-│   └── index.css       # Global styles
-├── ios/                # Capacitor Xcode project (Swift plugins live here)
-├── scripts/            # ios-assets.swift: icon + launch image generator
-├── docs/ipad-port.md   # How and why the iPad port was built
-├── .env                # Environment variables (not in git)
-├── .env.example        # Environment template
-└── package.json
+│   ├── App.jsx          # app shell: navigation, theme
+│   ├── components/      # screens and widgets (shared by both apps)
+│   ├── core/            # database, backend API, Smart Add scraper (shared)
+│   ├── shared/          # API types, platform detection
+│   ├── main/            # Mac-only: better-sqlite3 adapter
+│   ├── ios/             # iPad entry point and native plugin bindings
+│   ├── main.js          # Electron main process
+│   ├── preload.ts       # Electron preload bridge
+│   └── index.css        # all styles and theme tokens
+├── ios/                 # Capacitor Xcode project (Swift plugins live here)
+├── scripts/             # iPad icon and launch image generator
+├── docs/ipad-port.md    # iPad port notes
+└── doc/                 # README screenshots
 ```
 
-## Security
-
-- API keys are stored in `.env` file (gitignored)
-- Never commit the `.env` file to version control
-- Use `.env.example` as a template for required variables
+Contributor notes (architecture, conventions, how to add a feature on both
+platforms) are in [`CLAUDE.md`](CLAUDE.md) and [`AGENTS.md`](AGENTS.md).
 
 ## License
 

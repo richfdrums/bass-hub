@@ -1,33 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import TideWidget from './TideWidget';
 import WeatherWidget from './WeatherWidget';
+import ConditionsStrip from './ConditionsStrip';
+
+const getLocalDate = (dateStr) => {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d);
+};
 
 const Dashboard = ({ setActiveTab, navigateToSmartAdd, navigateToTripDetail }) => {
-    const [stats, setStats] = useState({ gearCount: 0, tripCount: 0, linkCount: 0 });
+    const [stats, setStats] = useState({ ownedCount: 0, wishlistCount: 0, tripCount: 0, linkCount: 0 });
     const [nextTrip, setNextTrip] = useState(null);
     const [daysUntil, setDaysUntil] = useState(null);
-    const gridRef = useRef(null);
-
-    // Masonry layout: each widget spans as many small grid rows as its height needs,
-    // so a short widget isn't padded out to the height of a tall one beside it.
-    useEffect(() => {
-        const grid = gridRef.current;
-        if (!grid) return;
-
-        const layout = () => {
-            const styles = getComputedStyle(grid);
-            const rowHeight = parseFloat(styles.gridAutoRows);
-            const gap = parseFloat(styles.getPropertyValue('--masonry-gap'));
-            Array.from(grid.children).forEach((child) => {
-                const span = Math.ceil((child.offsetHeight + gap) / rowHeight);
-                child.style.gridRowEnd = `span ${span}`;
-            });
-        };
-
-        const observer = new ResizeObserver(layout);
-        Array.from(grid.children).forEach((child) => observer.observe(child));
-        return () => observer.disconnect();
-    }, []);
+    const [weatherLocation, setWeatherLocation] = useState(null);
 
     useEffect(() => {
         const loadStats = async () => {
@@ -36,7 +21,8 @@ const Dashboard = ({ setActiveTab, navigateToSmartAdd, navigateToTripDetail }) =
             const links = await window.fishingApi.getLinks();
 
             setStats({
-                gearCount: gear.length,
+                ownedCount: gear.filter(g => !g.is_wishlist).length,
+                wishlistCount: gear.filter(g => g.is_wishlist).length,
                 tripCount: trips.length,
                 linkCount: links.length
             });
@@ -44,11 +30,6 @@ const Dashboard = ({ setActiveTab, navigateToSmartAdd, navigateToTripDetail }) =
             // Calculate next trip logic
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-
-            const getLocalDate = (dateStr) => {
-                const [y, m, d] = dateStr.split('-').map(Number);
-                return new Date(y, m - 1, d);
-            };
 
             const futureTrips = trips
                 .filter(t => t.start_date && getLocalDate(t.start_date) >= today)
@@ -78,38 +59,57 @@ const Dashboard = ({ setActiveTab, navigateToSmartAdd, navigateToTripDetail }) =
         }
     };
 
+    const todayLabel = new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+    const nextTripDate = nextTrip
+        ? getLocalDate(nextTrip.start_date).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })
+        : null;
+
     return (
         <div className="dashboard">
-            <div className="grid" ref={gridRef}>
-                <div className="widget" onClick={() => setActiveTab('gear')}>
-                    <div className="widget-header">
-                        <h3>Gear Catalog</h3>
-                        <button
-                            className="widget-action"
-                            onClick={(e) => { e.stopPropagation(); navigateToSmartAdd(); }}
-                        >
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="btn-icon">
-                                <path d="M12 4v16m8-8H4" />
-                            </svg>
-                            Add
-                        </button>
-                    </div>
-                    <p className="big-number">{stats.gearCount}</p>
-                    <p>items in your inventory</p>
+            <div className="view-header">
+                <div className="view-title">
+                    <span className="view-eyebrow">{todayLabel}</span>
+                    <h1>Dashboard</h1>
                 </div>
-                <div className="widget" onClick={handleTripsClick}>
-                    <h3>Fishing Trips</h3>
-                    <p className="big-number">{nextTrip ? daysUntil : stats.tripCount}</p>
-                    <p>{nextTrip ? `${daysUntil === 1 ? 'day' : 'days'} until the next adventure` : 'logged adventures'}</p>
-                </div>
-                <div className="widget" onClick={() => setActiveTab('links')}>
-                    <h3>Quick Links</h3>
-                    <p className="big-number">{stats.linkCount}</p>
-                    <p>useful resources saved</p>
-                </div>
-                <WeatherWidget />
-                <TideWidget />
+                <button className="btn-outline" onClick={navigateToSmartAdd}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="btn-icon">
+                        <path d="M12 4v16m8-8H4" />
+                    </svg>
+                    Smart Add
+                </button>
             </div>
+
+            <ConditionsStrip locationKey={weatherLocation} />
+
+            <section className="stat-row">
+                <div className="widget stat-tile" onClick={() => setActiveTab('gear')}>
+                    <span className="stat-label">Gear owned</span>
+                    <p className="big-number">{stats.ownedCount}</p>
+                    <span className="stat-sub">{stats.wishlistCount} on the wishlist</span>
+                </div>
+                <div className="widget stat-tile" onClick={handleTripsClick}>
+                    <span className="stat-label">{nextTrip ? 'Next trip' : 'Fishing trips'}</span>
+                    {nextTrip ? (
+                        <p className="big-number accent">
+                            {daysUntil === 0 ? 'Today' : daysUntil}
+                            {daysUntil > 0 && <span className="stat-unit">{daysUntil === 1 ? 'day' : 'days'}</span>}
+                        </p>
+                    ) : (
+                        <p className="big-number">{stats.tripCount}</p>
+                    )}
+                    <span className="stat-sub">{nextTrip ? `${nextTrip.location} · ${nextTripDate}` : 'logged adventures'}</span>
+                </div>
+                <div className="widget stat-tile" onClick={() => setActiveTab('links')}>
+                    <span className="stat-label">Quick links</span>
+                    <p className="big-number">{stats.linkCount}</p>
+                    <span className="stat-sub">saved resources</span>
+                </div>
+            </section>
+
+            <section className="dashboard-panels">
+                <WeatherWidget onLocationChange={setWeatherLocation} />
+                <TideWidget />
+            </section>
         </div>
     );
 };

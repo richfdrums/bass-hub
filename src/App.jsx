@@ -4,6 +4,9 @@
 
 import React, { useState, useEffect } from "react";
 import { APIProvider } from "@vis.gl/react-google-maps";
+import "@fontsource-variable/manrope";
+import "@fontsource/ibm-plex-mono/400.css";
+import "@fontsource/ibm-plex-mono/500.css";
 import "./index.css";
 import Sidebar from "./components/Sidebar.jsx";
 import Dashboard from "./components/Dashboard.jsx";
@@ -12,7 +15,10 @@ import FishingTrips from "./components/FishingTrips.jsx";
 import QuickLinks from "./components/QuickLinks.jsx";
 import Settings from "./components/Settings.jsx";
 import Modal from "./components/Modal.jsx";
+import ThemeToggle from "./components/ThemeToggle.jsx";
 import { IS_IOS } from "./shared/platform";
+
+const THEME_SETTING = "theme";
 
 const App = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -22,6 +28,37 @@ const App = () => {
   const [mapsApiKey, setMapsApiKey] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [showFirstRun, setShowFirstRun] = useState(false);
+  const [theme, setTheme] = useState('dark');
+
+  // The palette is switched by data-theme on <html>; index.css holds both.
+  // On the iPad the status bar text must follow too, or iOS keeps the system
+  // style and dims a light page behind white text. Loaded only there.
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    if (IS_IOS) {
+      import('@capacitor/status-bar')
+        .then(({ StatusBar, Style }) => StatusBar.setStyle({ style: theme === 'light' ? Style.Light : Style.Dark }))
+        .catch((err) => console.error('Failed to set status bar style:', err));
+    }
+  }, [theme]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const saved = await window.fishingApi.getSetting(THEME_SETTING);
+        if (saved === 'light' || saved === 'dark') setTheme(saved);
+      } catch (err) {
+        console.error('Failed to load theme:', err);
+      }
+    })();
+  }, []);
+
+  const changeTheme = (next) => {
+    setTheme(next);
+    window.fishingApi.updateSetting(THEME_SETTING, next).catch((err) => {
+      console.error('Failed to save theme:', err);
+    });
+  };
 
   useEffect(() => {
     const fetchKey = async () => {
@@ -119,13 +156,12 @@ const App = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#0a0a0a',
-        color: 'white',
-        fontFamily: 'system-ui'
+        background: 'var(--bg-color)',
+        color: 'var(--text-main)'
       }}>
         <div style={{ textAlign: 'center' }}>
           <h2 style={{ marginBottom: '10px' }}>Bass Hub</h2>
-          <p style={{ color: '#888', fontSize: '0.9rem' }}>Preparing your tackle box...</p>
+          <p style={{ color: 'var(--text-dim)', fontSize: '0.9rem' }}>Preparing your tackle box...</p>
         </div>
       </div>
     );
@@ -137,6 +173,7 @@ const App = () => {
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       <main className="main-content">
         <div className="scroll-area">
+          <ThemeToggle theme={theme} onChange={changeTheme} />
           {renderContent()}
         </div>
       </main>

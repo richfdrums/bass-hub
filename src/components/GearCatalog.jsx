@@ -12,6 +12,9 @@ const CATEGORIES = {
     TERMINAL: 'Terminal Tackle'
 };
 
+// Category filter value that shows every category
+const ALL = 'All';
+
 const LIST_TYPES = {
     OWNED: 'Owned',
     WISHLIST: 'Wishlist'
@@ -119,7 +122,11 @@ const GearDetail = ({ item, onBack, onEdit, onDelete }) => {
 
 const GearCatalog = ({ initialShowSmartAdd, onSmartAddHandled, initialUrl, initialListType, onUrlHandled, initialShowManualForm, onManualHandled }) => {
     const [gear, setGear] = useState([]);
-    const [activeCategory, setActiveCategory] = useState(CATEGORIES.RODS);
+    // activeCategory filters the grid (may be ALL); formCategory is the category
+    // of the item being added or edited.
+    const [activeCategory, setActiveCategory] = useState(ALL);
+    const [formCategory, setFormCategory] = useState(CATEGORIES.RODS);
+    const [search, setSearch] = useState('');
     const [activeList, setActiveList] = useState(LIST_TYPES.OWNED);
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
@@ -147,6 +154,7 @@ const GearCatalog = ({ initialShowSmartAdd, onSmartAddHandled, initialUrl, initi
             const defaultIsWishlist = initialShowSmartAdd || initialUrl ? 1 : (activeList === LIST_TYPES.WISHLIST ? 1 : 0);
 
             setFormData(initialUrl ? { url: initialUrl, is_wishlist: 1 } : { is_wishlist: defaultIsWishlist });
+            setFormCategory(activeCategory === ALL ? CATEGORIES.RODS : activeCategory);
             setEditingId(null);
             setShowForm(true);
 
@@ -186,7 +194,7 @@ const GearCatalog = ({ initialShowSmartAdd, onSmartAddHandled, initialUrl, initi
         e.preventDefault();
         const gearData = {
             ...formData,
-            category: activeCategory,
+            category: formCategory,
             is_wishlist: formData.is_wishlist !== undefined ? formData.is_wishlist : (activeList === LIST_TYPES.WISHLIST ? 1 : 0)
         };
 
@@ -205,6 +213,7 @@ const GearCatalog = ({ initialShowSmartAdd, onSmartAddHandled, initialUrl, initi
 
     const resetForm = () => {
         setFormData({ is_wishlist: activeList === LIST_TYPES.WISHLIST ? 1 : 0 });
+        setFormCategory(activeCategory === ALL ? CATEGORIES.RODS : activeCategory);
         setEditingId(null);
         setShowForm(false);
         setExtractError(null);
@@ -214,6 +223,7 @@ const GearCatalog = ({ initialShowSmartAdd, onSmartAddHandled, initialUrl, initi
 
     const handleEdit = (item) => {
         setFormData(item);
+        setFormCategory(item.category);
         setEditingId(item.id);
         setSelectedItem(null);
         setExtractError(null);
@@ -256,7 +266,9 @@ const GearCatalog = ({ initialShowSmartAdd, onSmartAddHandled, initialUrl, initi
                 is_wishlist: useWishlist,
                 url: urlToProcess
             });
-            setActiveCategory(extractedData.category);
+            setFormCategory(extractedData.category);
+            // Follow the new item if a single category is showing; "All" already does
+            if (activeCategory !== ALL) setActiveCategory(extractedData.category);
             setEditingId(null);
             setShowForm(true);
             setLastExtractedUrl(urlToProcess);
@@ -290,10 +302,26 @@ const GearCatalog = ({ initialShowSmartAdd, onSmartAddHandled, initialUrl, initi
 
     const isUrlPasted = formData.url && formData.url.startsWith('http') && !editingId && formData.url !== lastExtractedUrl;
 
+    const inActiveList = (g) => (activeList === LIST_TYPES.WISHLIST ? g.is_wishlist === 1 : g.is_wishlist === 0);
+    const query = search.trim().toLowerCase();
+    const matchesSearch = (g) => !query ||
+        (g.brand || '').toLowerCase().includes(query) ||
+        (g.model || '').toLowerCase().includes(query);
+
     const filteredGear = gear.filter(g =>
-        g.category === activeCategory &&
-        (activeList === LIST_TYPES.WISHLIST ? g.is_wishlist === 1 : g.is_wishlist === 0)
+        (activeCategory === ALL || g.category === activeCategory) &&
+        inActiveList(g) &&
+        matchesSearch(g)
     );
+
+    const ownedCount = gear.filter(g => !g.is_wishlist).length;
+    const wishlistCount = gear.filter(g => g.is_wishlist).length;
+
+    const emptyMessage = query
+        ? `No matches for “${search.trim()}”.`
+        : activeCategory === ALL
+            ? `Nothing in your ${activeList.toLowerCase()} yet.`
+            : `No ${activeCategory} in your ${activeList.toLowerCase()} yet.`;
 
     if (selectedItem) {
         return (
@@ -306,33 +334,34 @@ const GearCatalog = ({ initialShowSmartAdd, onSmartAddHandled, initialUrl, initi
         );
     }
 
-    const formTitle = `${editingId ? 'Edit' : 'Add New'} ${activeCategory === CATEGORIES.RODS ? 'Rod' :
-        activeCategory === CATEGORIES.REELS ? 'Reel' :
-            activeCategory === CATEGORIES.LURES ? 'Lure' :
-                activeCategory
+    const formTitle = `${editingId ? 'Edit' : 'Add New'} ${formCategory === CATEGORIES.RODS ? 'Rod' :
+        formCategory === CATEGORIES.REELS ? 'Reel' :
+            formCategory === CATEGORIES.LURES ? 'Lure' :
+                formCategory
         }`;
 
     return (
         <div className="gear-catalog">
             <div className="view-header">
-                <div className="header-left">
-                    <h1>Gear Catalog {gear.length > 0 && <span className="title-count">({gear.length})</span>}</h1>
+                <div className="view-title">
+                    <span className="view-eyebrow">{ownedCount} owned · {wishlistCount} on the wishlist</span>
+                    <h1>Gear Catalog</h1>
+                </div>
+                <div className="header-actions">
                     <div className="list-toggle">
                         <button
                             className={`toggle-btn ${activeList === LIST_TYPES.OWNED ? 'active' : ''}`}
                             onClick={() => setActiveList(LIST_TYPES.OWNED)}
                         >
-                            Owned {gear.filter(g => !g.is_wishlist).length > 0 && <span className="tab-count">({gear.filter(g => !g.is_wishlist).length})</span>}
+                            Owned
                         </button>
                         <button
                             className={`toggle-btn ${activeList === LIST_TYPES.WISHLIST ? 'active' : ''}`}
                             onClick={() => setActiveList(LIST_TYPES.WISHLIST)}
                         >
-                            Wishlist {gear.filter(g => g.is_wishlist).length > 0 && <span className="tab-count">({gear.filter(g => g.is_wishlist).length})</span>}
+                            Wishlist
                         </button>
                     </div>
-                </div>
-                <div className="header-actions">
                     <button className="btn-primary" onClick={() => { resetForm(); setShowForm(true); }}>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="btn-icon">
                             <path d="M12 4v16m8-8H4" />
@@ -342,31 +371,44 @@ const GearCatalog = ({ initialShowSmartAdd, onSmartAddHandled, initialUrl, initi
                 </div>
             </div>
 
-            <div className="category-tabs">
-                {Object.values(CATEGORIES).map(cat => {
-                    const count = gear.filter(g =>
-                        g.category === cat &&
-                        (activeList === LIST_TYPES.WISHLIST ? g.is_wishlist === 1 : g.is_wishlist === 0)
-                    ).length;
+            <div className="gear-toolbar">
+                <div className="category-tabs">
+                    {[ALL, ...Object.values(CATEGORIES)].map(cat => {
+                        const count = gear.filter(g => (cat === ALL || g.category === cat) && inActiveList(g)).length;
 
-                    return (
-                        <button
-                            key={cat}
-                            className={`tab ${activeCategory === cat ? 'active' : ''}`}
-                            onClick={() => setActiveCategory(cat)}
-                        >
-                            {cat}
-                            {count > 0 && <span className="tab-count"> ({count})</span>}
-                        </button>
-                    );
-                })}
+                        return (
+                            <button
+                                key={cat}
+                                className={`tab ${activeCategory === cat ? 'active' : ''}`}
+                                onClick={() => setActiveCategory(cat)}
+                            >
+                                {cat}
+                                {count > 0 && <span className="tab-count"> ({count})</span>}
+                            </button>
+                        );
+                    })}
+                </div>
+                <label className="search-field">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                        <circle cx="11" cy="11" r="7" />
+                        <path d="m20 20-3.5-3.5" />
+                    </svg>
+                    <span className="visually-hidden">Search gear</span>
+                    <input
+                        type="search"
+                        placeholder="Search brand or model"
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                    />
+                </label>
             </div>
 
             <Modal isOpen={showForm} onClose={resetForm} title={formTitle}>
                 <GearForm
                     formData={formData}
                     setFormData={setFormData}
-                    activeCategory={activeCategory}
+                    activeCategory={formCategory}
+                    onCategoryChange={setFormCategory}
                     dragActive={dragActive}
                     handleDrag={handleDrag}
                     handleDrop={handleDrop}
@@ -386,7 +428,7 @@ const GearCatalog = ({ initialShowSmartAdd, onSmartAddHandled, initialUrl, initi
 
             <div className="gear-list">
                 {filteredGear.length === 0 ? (
-                    <p className="empty-state">No {activeCategory} in your {activeList.toLowerCase()} yet.</p>
+                    <p className="empty-state">{emptyMessage}</p>
                 ) : (
                     <div className="gear-grid">
                         {filteredGear.map(item => (

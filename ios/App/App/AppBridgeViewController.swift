@@ -7,5 +7,12 @@ class AppBridgeViewController: CAPBridgeViewController {
     override open func capacitorDidLoad() {
         bridge?.registerPluginInstance(SqlitePlugin())
         bridge?.registerPluginInstance(SnapshotPlugin())
+
+        // iOS 26 dims the top of a scroll view under the status bar. The page
+        // scrolls inside the web content, not this scroll view, so the effect
+        // only shows as a grey band over the light theme.
+        if #available(iOS 26.0, *) {
+            webView?.scrollView.topEdgeEffect.isHidden = true
+        }
     }
 }
