@@ -11,7 +11,8 @@
     "publish": "electron-forge publish",
     "build:ios": "vite build -c vite.ios.config.mjs && cap sync ios",
     "typecheck": "tsc -p tsconfig.node.json && tsc -p tsconfig.web.json",
-    "lint": "echo \"No linting configured\""
+    "lint": "echo \"No linting configured\"",
+    "assets:ios": "swiftc -O scripts/ios-assets.swift -o /tmp/ios-assets && /tmp/ios-assets"
   },
   "keywords": [],
   "author": {
