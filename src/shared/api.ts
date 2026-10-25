@@ -74,6 +74,11 @@ export type ExtractResult =
   | { success: true; data: ExtractedGear }
   | { success: false; error: string };
 
+/** Result of re-scraping just the product image for an existing item. */
+export type RefreshImageResult =
+  | { success: true; imageUrl: string }
+  | { success: false; error: string };
+
 export interface FileResult {
   success: boolean;
   path?: string;
@@ -103,6 +108,8 @@ export interface CoreApi {
 
   /** Scrapes a product page. Network work, but platform-neutral (global fetch). */
   extractGearDetails(url: string): Promise<ExtractResult>;
+  /** Re-scrapes only the product image, to backfill or repair `image_url`. */
+  refreshGearImage(url: string): Promise<RefreshImageResult>;
   /** Best-effort page title for prefill; '' on failure. */
   fetchPageTitle(url: string): Promise<string>;
 }

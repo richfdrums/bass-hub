@@ -6,7 +6,7 @@
 // itemprop/OpenGraph fallbacks — brittle by nature, retest on a real URL.
 
 import * as cheerio from 'cheerio';
-import type { ExtractResult } from '../shared/api';
+import type { ExtractResult, RefreshImageResult } from '../shared/api';
 
 const REQUEST_HEADERS = {
   'User-Agent':
@@ -58,6 +58,28 @@ export async function fetchPageTitle(url: string): Promise<string> {
     console.error('Fetch title failed:', err instanceof Error ? err.message : err);
     return '';
   }
+}
+
+/**
+ * The product image for a parsed page. One selector list shared by Smart
+ * Extract and the per-item image refresh, so both agree on what "the image" is.
+ * Returns '' when nothing matches; relative URLs are resolved against the page.
+ */
+function pickImageUrl($: cheerio.CheerioAPI, pageUrl: string): string {
+  let imageUrl =
+    $('img.main_image').attr('src') || // Tackle Warehouse specific
+    $('[itemprop="image"]').attr('src') ||
+    $('[itemprop="image"]').attr('content') ||
+    $('meta[property="og:image"]').attr('content') ||
+    $('link[rel="image_src"]').attr('href') ||
+    '';
+
+  if (imageUrl && !imageUrl.startsWith('http')) {
+    const baseUrl = new URL(pageUrl).origin;
+    imageUrl = new URL(imageUrl, baseUrl).href;
+  }
+
+  return imageUrl;
 }
 
 export async function extractGearDetails(url: string): Promise<ExtractResult> {
@@ -117,18 +139,7 @@ export async function extractGearDetails(url: string): Promise<ExtractResult> {
     }
 
     // Image Extraction
-    let imageUrl =
-      $('img.main_image').attr('src') || // Tackle Warehouse specific
-      $('[itemprop="image"]').attr('src') ||
-      $('[itemprop="image"]').attr('content') ||
-      $('meta[property="og:image"]').attr('content') ||
-      $('link[rel="image_src"]').attr('href') ||
-      '';
-
-    if (imageUrl && !imageUrl.startsWith('http')) {
-      const baseUrl = new URL(url).origin;
-      imageUrl = new URL(imageUrl, baseUrl).href;
-    }
+    const imageUrl = pickImageUrl($, url);
 
     // Enhanced Category Detection
     let category = 'Lures'; // Default
@@ -202,6 +213,36 @@ export async function extractGearDetails(url: string): Promise<ExtractResult> {
     };
   } catch (error) {
     console.error('Extraction failed:', error);
+    return { success: false, error: 'Could not fetch page details.' };
+  }
+}
+
+/**
+ * Re-reads only the product image for an existing item. Used by the edit form
+ * to backfill `image_url` on gear that predates hotlinked images (or whose
+ * stored URL has gone stale) without touching any other field.
+ */
+export async function extractGearImage(url: string): Promise<RefreshImageResult> {
+  try {
+    const response = await fetch(url, {
+      headers: REQUEST_HEADERS,
+      signal: AbortSignal.timeout(20000),
+    });
+    if (!response.ok) {
+      console.error('Image refresh failed:', response.status, url);
+      return { success: false, error: `Could not fetch the page (HTTP ${response.status}).` };
+    }
+
+    const $ = cheerio.load(await response.text());
+    const imageUrl = pickImageUrl($, url);
+
+    if (!imageUrl) {
+      return { success: false, error: 'No product image found on that page.' };
+    }
+
+    return { success: true, imageUrl };
+  } catch (error) {
+    console.error('Image refresh failed:', error);
     return { success: false, error: 'Could not fetch page details.' };
   }
 }

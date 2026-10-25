@@ -29,6 +29,9 @@ const GearForm = ({
     extractError,
     isUrlPasted,
     processUrl,
+    onRefreshImage,
+    isRefreshingImage,
+    imageRefreshError,
     onSubmit,
     onCancel,
     editingId
@@ -103,6 +106,31 @@ const GearForm = ({
             )}
         </div>
     );
+
+    // Backfills image_url from the product page — the fix for gear imported
+    // from the Mac, whose image_path points at a file this device cannot read.
+    const canRefreshImage = /^https?:\/\//i.test(formData.url || '');
+
+    const imageRefresh = canRefreshImage ? (
+        <div className="image-refresh">
+            <button
+                type="button"
+                className="btn-refresh-image"
+                onClick={onRefreshImage}
+                disabled={isRefreshingImage || isExtracting}
+            >
+                {isRefreshingImage ? (
+                    <span className="spinner" />
+                ) : (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="btn-icon">
+                        <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                )}
+                {isRefreshingImage ? 'Refreshing image…' : 'Refresh image from product URL'}
+            </button>
+            {imageRefreshError && <p className="error-text">{imageRefreshError}</p>}
+        </div>
+    ) : null;
 
     const description = (
         <textarea placeholder="Description" value={formData.description || ''} onChange={e => setFormData({ ...formData, description: e.target.value })} />
@@ -248,6 +276,7 @@ const GearForm = ({
     return (
         <form onSubmit={onSubmit}>
             {imageUpload}
+            {imageRefresh}
             {categoryFields}
             {urlField}
             <div className="form-actions">

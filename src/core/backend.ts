@@ -5,7 +5,7 @@
 import type { CoreApi } from '../shared/api';
 import { setPlatform, type Platform } from './platform';
 import { gear, initSchema, links, settings, trips } from './db';
-import { extractGearDetails, fetchPageTitle } from './extract';
+import { extractGearDetails, extractGearImage, fetchPageTitle } from './extract';
 
 export async function initBackend(platformConfig: Platform): Promise<void> {
   setPlatform(platformConfig);
@@ -32,5 +32,6 @@ export const backend: CoreApi = {
   updateSetting: (key, value) => settings.set(key, value),
 
   extractGearDetails: (url) => extractGearDetails(url),
+  refreshGearImage: (url) => extractGearImage(url),
   fetchPageTitle: (url) => fetchPageTitle(url),
 };

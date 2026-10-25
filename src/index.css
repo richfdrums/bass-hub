@@ -355,6 +355,51 @@ h1 {
   color: var(--accent);
 }
 
+/* Image refresh (edit form): backfills image_url from the product page */
+.image-refresh {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: -6px 0 15px;
+}
+
+.btn-refresh-image {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-refresh-image:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.08);
+}
+
+.btn-refresh-image:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-refresh-image .btn-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.btn-refresh-image .spinner {
+  width: 12px;
+  height: 12px;
+}
+
 .preview-container {
   position: relative;
   width: 100%;

@@ -12,7 +12,7 @@ Application entry point.  Displays simple widgets for gear catalog, trips, links
 ![dashboard screenshot](doc/dashboard.png)
 
 ### Gear Catalog
-Manage your fishing rods, reels, lures, line, and terminal tackle.  Differentiates between owned gear and like-to-have (wishlist).  Features "smart add" functionality in which metadata information can be ingested from a provided product page URL (e.g., on Tackle Warehouse or BPS).
+Manage your fishing rods, reels, lures, line, and terminal tackle.  Differentiates between owned gear and like-to-have (wishlist).  Features "smart add" functionality in which metadata information can be ingested from a provided product page URL (e.g., on Tackle Warehouse or BPS).  Existing items can re-read just the product image from their saved URL with **Refresh image from product URL** on the edit form.
 
 ![gear catalog screenshot](doc/gear-catalog.png)
 ![gear catalog screenshot](doc/gear-smart-add-1.png)

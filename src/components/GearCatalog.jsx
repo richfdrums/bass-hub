@@ -127,6 +127,8 @@ const GearCatalog = ({ initialShowSmartAdd, onSmartAddHandled, initialUrl, initi
     const [dragActive, setDragActive] = useState(false);
     const [isExtracting, setIsExtracting] = useState(false);
     const [extractError, setExtractError] = useState(null);
+    const [isRefreshingImage, setIsRefreshingImage] = useState(false);
+    const [imageRefreshError, setImageRefreshError] = useState(null);
     const [lastExtractedUrl, setLastExtractedUrl] = useState('');
     const [lightboxImage, setLightboxImage] = useState(null);
     const [selectedItem, setSelectedItem] = useState(null);
@@ -206,6 +208,7 @@ const GearCatalog = ({ initialShowSmartAdd, onSmartAddHandled, initialUrl, initi
         setEditingId(null);
         setShowForm(false);
         setExtractError(null);
+        setImageRefreshError(null);
         setLastExtractedUrl('');
     };
 
@@ -213,6 +216,8 @@ const GearCatalog = ({ initialShowSmartAdd, onSmartAddHandled, initialUrl, initi
         setFormData(item);
         setEditingId(item.id);
         setSelectedItem(null);
+        setExtractError(null);
+        setImageRefreshError(null);
         setShowForm(true);
     };
 
@@ -259,6 +264,28 @@ const GearCatalog = ({ initialShowSmartAdd, onSmartAddHandled, initialUrl, initi
             setExtractError(result.error || 'Could not extract details from this URL.');
         }
         setIsExtracting(false);
+    };
+
+    /**
+     * Re-reads the product image for the item being edited. Only `image_url` is
+     * replaced: a local `image_path` is a deliberate user override and stays.
+     */
+    const refreshImage = async () => {
+        const url = (formData.url || '').trim();
+        if (!url) return;
+
+        setIsRefreshingImage(true);
+        setImageRefreshError(null);
+
+        const result = await window.fishingApi.refreshGearImage(url);
+
+        if (result.success) {
+            setFormData(prev => ({ ...prev, image_url: result.imageUrl }));
+        } else {
+            setImageRefreshError(result.error || 'Could not refresh the image.');
+        }
+
+        setIsRefreshingImage(false);
     };
 
     const isUrlPasted = formData.url && formData.url.startsWith('http') && !editingId && formData.url !== lastExtractedUrl;
@@ -348,6 +375,9 @@ const GearCatalog = ({ initialShowSmartAdd, onSmartAddHandled, initialUrl, initi
                     extractError={extractError}
                     isUrlPasted={isUrlPasted}
                     processUrl={processUrl}
+                    onRefreshImage={refreshImage}
+                    isRefreshingImage={isRefreshingImage}
+                    imageRefreshError={imageRefreshError}
                     onSubmit={handleSubmit}
                     onCancel={resetForm}
                     editingId={editingId}

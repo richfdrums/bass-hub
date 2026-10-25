@@ -47,6 +47,7 @@ ipcMain.handle('delete-gear', (_event, id) => backend.deleteGear(id));
 
 // Scraping lives in src/core/extract.ts; these two just forward to it.
 ipcMain.handle('extract-gear-details', (_event, url) => backend.extractGearDetails(url));
+ipcMain.handle('refresh-gear-image', (_event, url) => backend.refreshGearImage(url));
 ipcMain.handle('fetch-page-title', (_event, url) => backend.fetchPageTitle(url));
 
 ipcMain.handle('save-image', async (event, filePath) => {
