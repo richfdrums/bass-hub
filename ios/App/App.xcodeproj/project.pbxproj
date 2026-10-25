@@ -18,6 +18,8 @@
 		9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9582B6822FE993A50072D4E8 /* SceneDelegate.swift */; };
 		BA5500032FE993A70072D4E8 /* SqlitePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA5500022FE993A70072D4E8 /* SqlitePlugin.swift */; };
 		BA5500052FE993A70072D4E8 /* AppBridgeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA5500042FE993A70072D4E8 /* AppBridgeViewController.swift */; };
+		BA5500072FE993A70072D4E8 /* SnapshotPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA5500062FE993A70072D4E8 /* SnapshotPlugin.swift */; };
+		BA5500092FE993A70072D4E8 /* DbPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA5500082FE993A70072D4E8 /* DbPaths.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +35,8 @@
 		9582B6822FE993A50072D4E8 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		BA5500022FE993A70072D4E8 /* SqlitePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SqlitePlugin.swift; sourceTree = "<group>"; };
 		BA5500042FE993A70072D4E8 /* AppBridgeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppBridgeViewController.swift; sourceTree = "<group>"; };
+		BA5500062FE993A70072D4E8 /* SnapshotPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotPlugin.swift; sourceTree = "<group>"; };
+		BA5500082FE993A70072D4E8 /* DbPaths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DbPaths.swift; sourceTree = "<group>"; };
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -71,6 +75,8 @@
 				9582B6822FE993A50072D4E8 /* SceneDelegate.swift */,
 				BA5500022FE993A70072D4E8 /* SqlitePlugin.swift */,
 				BA5500042FE993A70072D4E8 /* AppBridgeViewController.swift */,
+				BA5500062FE993A70072D4E8 /* SnapshotPlugin.swift */,
+				BA5500082FE993A70072D4E8 /* DbPaths.swift */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
@@ -168,6 +174,8 @@
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
 				BA5500032FE993A70072D4E8 /* SqlitePlugin.swift in Sources */,
 				BA5500052FE993A70072D4E8 /* AppBridgeViewController.swift in Sources */,
+				BA5500072FE993A70072D4E8 /* SnapshotPlugin.swift in Sources */,
+				BA5500092FE993A70072D4E8 /* DbPaths.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

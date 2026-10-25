@@ -23,6 +23,28 @@ public class SqlitePlugin: CAPPlugin, CAPBridgedPlugin {
 
     private let queue = DispatchQueue(label: "basshub.sqlite")
     private var db: OpaquePointer?
+    private var openedPath: String?
+
+    /// Set when the database is opened. SnapshotPlugin closes and reopens this
+    /// connection around a file swap, so the two plugins cannot fight over it.
+    static weak var shared: SqlitePlugin?
+
+    /// Serial queue access for the snapshot plugin: close, swap the file, reopen.
+    func closeDatabase() {
+        queue.sync {
+            if db != nil {
+                sqlite3_close(db)
+                db = nil
+            }
+        }
+    }
+
+    func reopenDatabase() {
+        queue.sync {
+            guard db == nil, let path = openedPath else { return }
+            sqlite3_open(path, &db)
+        }
+    }
 
     // SQLITE_TRANSIENT: tells SQLite to copy bound text before we free it.
     private let transient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
@@ -47,6 +69,11 @@ public class SqlitePlugin: CAPPlugin, CAPBridgedPlugin {
                 let path = dir.appendingPathComponent(name).path
                 if self.db == nil {
                     guard sqlite3_open(path, &self.db) == SQLITE_OK else { throw self.lastError() }
+                    self.openedPath = path
+                    SqlitePlugin.shared = self
+                    // Invisible rolling backups: a bad import or a bad day is
+                    // always recoverable from Application Support/backups.
+                    DbPaths.backupCurrent()
                 }
                 call.resolve(["path": path])
             } catch {

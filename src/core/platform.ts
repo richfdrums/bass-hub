@@ -26,6 +26,12 @@ export interface SqlDatabase {
    * core/db.ts, which serializes these: SQLite has no nested transactions.
    */
   transaction<T>(fn: () => Promise<T>): Promise<T>;
+  /**
+   * Releases the connection. Only used before replacing the database file;
+   * after this the adapter is dead. The iPad does this inside its native
+   * plugin instead (SnapshotPlugin.swift).
+   */
+  close?(): Promise<void>;
 }
 
 export interface Platform {

@@ -1992,3 +1992,27 @@ textarea,
 [data-platform="ios"] .modal-content.large {
   width: min(900px, calc(100vw - 48px));
 }
+
+/* Snapshot import confirmation (Settings) */
+.snapshot-summary {
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+
+.snapshot-summary strong {
+  color: var(--text-main);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.settings-hint {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  margin-top: 10px;
+}

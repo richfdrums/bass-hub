@@ -107,6 +107,32 @@ export interface CoreApi {
   fetchPageTitle(url: string): Promise<string>;
 }
 
+export interface SnapshotSummary {
+  gear: number;
+  trips: number;
+  links: number;
+}
+
+/**
+ * Result of choosing a snapshot file. `ready` means it is a valid Bass Hub
+ * database this build understands and is staged for `applySnapshot`; nothing
+ * has been replaced yet.
+ */
+export type PickSnapshotResult =
+  | { status: 'cancelled' }
+  | { status: 'error'; error: string }
+  | { status: 'ready'; path: string; summary: SnapshotSummary };
+
+/**
+ * Whole-file snapshot exchange. iPad-only for now: the desktop moves data with
+ * native open/save dialogs (DesktopApi) and is read-only by convention.
+ */
+export interface SnapshotApi {
+  exportSnapshot(): Promise<FileResult>;
+  pickSnapshot(): Promise<PickSnapshotResult>;
+  applySnapshot(path: string): Promise<FileResult>;
+}
+
 /** Desktop-only extras. The iPad has no file system picker or native dialogs. */
 export interface DesktopApi {
   saveImage(filePath: string): Promise<string | null>;
@@ -116,4 +142,4 @@ export interface DesktopApi {
   importDatabase(): Promise<FileResult>;
 }
 
-export type Api = CoreApi & DesktopApi;
+export type Api = CoreApi & DesktopApi & Partial<SnapshotApi>;

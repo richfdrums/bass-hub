@@ -11,6 +11,8 @@ import GearCatalog from "./components/GearCatalog.jsx";
 import FishingTrips from "./components/FishingTrips.jsx";
 import QuickLinks from "./components/QuickLinks.jsx";
 import Settings from "./components/Settings.jsx";
+import Modal from "./components/Modal.jsx";
+import { IS_IOS } from "./shared/platform";
 
 const App = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -19,6 +21,7 @@ const App = () => {
   const [selectedTripId, setSelectedTripId] = useState(null);
   const [mapsApiKey, setMapsApiKey] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [showFirstRun, setShowFirstRun] = useState(false);
 
   useEffect(() => {
     const fetchKey = async () => {
@@ -33,6 +36,37 @@ const App = () => {
     };
     fetchKey();
   }, []);
+
+  // iPad only: a fresh install starts empty, so point at the snapshot exchange
+  // once instead of leaving a blank app unexplained.
+  useEffect(() => {
+    if (!IS_IOS) return;
+    (async () => {
+      try {
+        const [gear, trips, links, dismissed] = await Promise.all([
+          window.fishingApi.getGear(),
+          window.fishingApi.getTrips(),
+          window.fishingApi.getLinks(),
+          window.fishingApi.getSetting("first_run_dismissed"),
+        ]);
+        if (!dismissed && gear.length === 0 && trips.length === 0 && links.length === 0) {
+          setShowFirstRun(true);
+        }
+      } catch (err) {
+        console.error("First-run check failed:", err);
+      }
+    })();
+  }, []);
+
+  const dismissFirstRun = async (goToSettings) => {
+    setShowFirstRun(false);
+    try {
+      await window.fishingApi.updateSetting("first_run_dismissed", "1");
+    } catch (err) {
+      console.error("Could not record first-run dismissal:", err);
+    }
+    if (goToSettings) setActiveTab("settings");
+  };
 
   const navigateToSmartAdd = () => {
     setActiveTab('gear');
@@ -106,6 +140,26 @@ const App = () => {
           {renderContent()}
         </div>
       </main>
+
+      <Modal
+        isOpen={showFirstRun}
+        onClose={() => dismissFirstRun(false)}
+        title="Bring your data over"
+      >
+        <p className="snapshot-summary">
+          Bass Hub on the iPad starts empty. If your tackle box lives on the Mac,
+          open Settings there and use <strong>Export .db File</strong>, save it to
+          iCloud Drive, then import it here under <strong>Snapshots</strong>.
+        </p>
+        <div className="modal-actions">
+          <button className="btn-secondary" onClick={() => dismissFirstRun(false)}>
+            Start fresh
+          </button>
+          <button className="btn-primary" onClick={() => dismissFirstRun(true)}>
+            Go to Settings
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 

@@ -9,6 +9,7 @@ import App from '../App.jsx';
 import { backend, initBackend } from '../core/backend';
 import { setLocalImageResolver } from '../components/GearImage.jsx';
 import { openIosDb } from './platform/iosDb';
+import { snapshots } from './platform/snapshots';
 import type { Api } from '../shared/api';
 
 const DB_NAME = 'fishing_hub_v6.db';
@@ -24,12 +25,13 @@ function showFatal(message: string) {
 }
 
 /**
- * The iPad implements the shared CoreApi in-process and stubs out the
- * desktop-only file/dialog methods. Snapshots (Phase 6) replace export/import.
+ * The iPad implements the shared CoreApi in-process, adds the snapshot
+ * exchange, and stubs out the desktop-only file/dialog methods.
  */
 function installApi(path: string): void {
   const api: Api = {
     ...backend,
+    ...snapshots,
 
     // The Maps key is baked into the bundle at build time (see
     // vite.ios.config.mjs); Settings still edits the DB copy, which is read
@@ -39,8 +41,8 @@ function installApi(path: string): void {
     // Desktop-only until the photo-library override (P2).
     saveImage: async () => null,
     getFilePath: () => '',
-    exportDatabase: async () => ({ success: false, error: 'Not available on iPad yet' }),
-    importDatabase: async () => ({ success: false, error: 'Not available on iPad yet' }),
+    exportDatabase: async () => ({ success: false, error: 'Use Export snapshot on iPad' }),
+    importDatabase: async () => ({ success: false, error: 'Use Import snapshot on iPad' }),
   };
 
   // image_path is a desktop-local file, which this app cannot load. Returning

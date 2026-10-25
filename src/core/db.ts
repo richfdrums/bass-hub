@@ -99,7 +99,21 @@ async function ensureColumn(table: string, column: string, declaration: string):
   }
 }
 
+/** Bumped whenever the schema changes in a way an older build cannot read. */
+const SCHEMA_VERSION = 1;
+
 export async function initSchema(): Promise<void> {
+  // Refuse a database written by a newer build instead of silently mangling it.
+  const { user_version: version } = (await platform().db.get<{ user_version: number }>(
+    'PRAGMA user_version'
+  )) ?? { user_version: 0 };
+  if (version > SCHEMA_VERSION) {
+    throw new Error(
+      `This database was written by a newer version of Bass Hub (schema v${version}, ` +
+        `this build understands v${SCHEMA_VERSION}). Update the app, or restore an older snapshot.`
+    );
+  }
+
   await platform().db.exec(SCHEMA);
 
   // Columns added after v1 of the schema. Order matters only for readability.
@@ -109,7 +123,7 @@ export async function initSchema(): Promise<void> {
   await ensureColumn('trips', 'map_query', 'TEXT');
   await ensureColumn('quick_links', 'category', "TEXT DEFAULT 'Other'");
 
-  await platform().db.exec('PRAGMA user_version = 1');
+  await platform().db.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`);
 }
 
 export const gear = {

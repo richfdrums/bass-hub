@@ -3,7 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import started from 'electron-squirrel-startup';
 import { backend, initBackend } from './core/backend';
-import { openElectronDb } from './main/platform/electronDb';
+import { openElectronDb, validateSnapshot } from './main/platform/electronDb';
 import { platform } from './core/platform';
 import dotenv from 'dotenv';
 // Load environment variables
@@ -138,6 +138,12 @@ ipcMain.handle('import-database', async (event) => {
       return { success: false, error: 'File not found' };
     }
 
+    // Reject an incompatible or corrupt file before it replaces anything.
+    const validation = validateSnapshot(backupPath);
+    if (!validation.ok) {
+      return { success: false, error: validation.error };
+    }
+
     try {
       const { response } = await dialog.showMessageBox({
         type: 'warning',
@@ -149,6 +155,9 @@ ipcMain.handle('import-database', async (event) => {
       });
 
       if (response === 1) {
+        // Close first: copying over a file with an open handle is undefined
+        // behaviour, and on a bad copy the app would restart into a corrupt DB.
+        await platform().db.close?.();
         fs.copyFileSync(backupPath, dbPath);
         app.relaunch();
         app.exit(0);
