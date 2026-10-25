@@ -123,7 +123,7 @@ const ConditionsStrip = ({ locationKey }) => {
                 <div key={cell.label} className="condition">
                     <span className="condition-label">{cell.label}</span>
                     <span className="condition-value">
-                        {cell.value} <span className="condition-unit">{cell.unit}</span>
+                        <span className="condition-number">{cell.value}</span> <span className="condition-unit">{cell.unit}</span>
                     </span>
                 </div>
             ))}

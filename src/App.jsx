@@ -30,8 +30,15 @@ const App = () => {
   const [theme, setTheme] = useState('dark');
 
   // The palette is switched by data-theme on <html>; index.css holds both.
+  // On the iPad the status bar text must follow too, or iOS keeps the system
+  // style and dims a light page behind white text. Loaded only there.
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
+    if (IS_IOS) {
+      import('@capacitor/status-bar')
+        .then(({ StatusBar, Style }) => StatusBar.setStyle({ style: theme === 'light' ? Style.Light : Style.Dark }))
+        .catch((err) => console.error('Failed to set status bar style:', err));
+    }
   }, [theme]);
 
   useEffect(() => {

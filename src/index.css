@@ -1880,7 +1880,7 @@ textarea,
 
 .stat-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 20px;
 }
 
@@ -2352,7 +2352,7 @@ textarea,
    pushes each cell's right border under the next so the last one is clipped. */
 .conditions-strip {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   background: var(--panel-bg);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -2363,9 +2363,16 @@ textarea,
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 14px 20px;
+  padding: 14px 18px;
   border-right: 1px solid var(--border);
   margin-right: -1px;
+}
+
+/* The unit wraps under the reading when a cell is narrow (iPad portrait);
+   the reading itself never breaks */
+.condition-number,
+.condition-unit {
+  white-space: nowrap;
 }
 
 .condition-label {
@@ -2380,7 +2387,6 @@ textarea,
   font-size: 1.375rem;
   font-weight: 500;
   color: var(--text-main);
-  white-space: nowrap;
 }
 
 .condition-unit {
