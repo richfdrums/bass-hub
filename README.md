@@ -88,6 +88,8 @@ The same UI also runs as a native iPad app (Capacitor + a small Swift SQLite
 plugin). The React components, the SQLite schema, and the scraper are shared with
 the Mac build — only the shell differs.
 
+![iPad dashboard screenshot](doc/ipad-dashboard.png)
+
 ### Running it
 
 ```bash
