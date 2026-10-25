@@ -8,7 +8,7 @@
 // files until P2, so its entry point overrides the resolver. Components never
 // need to know which platform they are on.
 
-import React from 'react';
+import React, { useState } from 'react';
 import type { GearItem } from '../shared/api';
 
 type Resolver = (filePath: string) => string | null;
@@ -40,11 +40,23 @@ interface GearImageProps {
 
 const GearImage = ({ item, className, alt, onClick }: GearImageProps) => {
     const src = gearImageSrc(item);
-    if (!src) return null;
+    // Hotlinked product images can 404 or be pulled later. Drop the box rather
+    // than showing a broken-image glyph in a styled frame. Tracking the failed
+    // src (not a boolean) lets a new item reuse the component and try again.
+    const [failedSrc, setFailedSrc] = useState<string | null>(null);
+    if (!src || src === failedSrc) return null;
 
     return (
         <div className={className} onClick={onClick} style={onClick ? { cursor: 'pointer' } : undefined}>
-            <img src={src} alt={alt ?? item?.model ?? ''} loading="lazy" />
+            <img
+                src={src}
+                alt={alt ?? item?.model ?? ''}
+                loading="lazy"
+                // The image hosts do not need to know where the request came
+                // from, and capacitor://localhost is not a useful referrer.
+                referrerPolicy="no-referrer"
+                onError={() => setFailedSrc(src)}
+            />
         </div>
     );
 };
