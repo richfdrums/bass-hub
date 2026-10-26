@@ -2160,15 +2160,19 @@ textarea,
   transition: width 0.18s ease;
 }
 
+/* Wide enough to clear the macOS traffic lights (x 16 to ~76) by 16px, so the
+   border does not sit flush against the zoom button. */
 .sidebar.collapsed {
-  width: 76px;
+  width: 92px;
 }
 
 .sidebar.collapsed .sidebar-header {
   flex-direction: column;
   justify-content: center;
   gap: 10px;
-  padding: 16px 8px;
+  /* Keep the expanded header's 44px top so the logo stays below the macOS
+     traffic lights; the iPad overrides this with its safe-area inset below. */
+  padding: 44px 8px 16px;
   margin-bottom: 12px;
 }
 
@@ -2245,6 +2249,11 @@ textarea,
 
 [data-platform="ios"] .sidebar-header {
   padding-top: calc(20px + env(safe-area-inset-top));
+}
+
+/* No traffic lights on the iPad, so the rail keeps its narrower width. */
+[data-platform="ios"] .sidebar.collapsed {
+  width: 76px;
 }
 
 [data-platform="ios"] .sidebar.collapsed .sidebar-header {
